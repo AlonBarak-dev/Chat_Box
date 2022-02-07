@@ -47,5 +47,13 @@ class Server:
             content = message[2:]
             # ---------------------------------
 
+            if name not in self.clients:
+                """DO SONTHING"""
+            
+
+
+
+
+
             ack_message = "Ack" + seq
             #self.send_socket(ack_message.decode(), )
