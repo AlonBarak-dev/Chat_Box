@@ -7,13 +7,18 @@ class Server:
         # a dict to hold all of the connected clients
         # {"client_name": client_PORT}
         self.clients = {}
-        # represent the latest available port number
+
+        # a list of available ports for new clients
         self.available_ports = [55000 + i for i in range(16)]
+
         # Create a datagram socket
         self.receive_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.send_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+
         # bind the receive socket
-        self.receive_socket.bind(("localhost", 50000))
+        self.server_port = 50000
+        self.ip = "localhost"
+        self.receive_socket.bind((self.ip, self.server_port))
 
     def add_client(self, name):
         if name in self.clients:
@@ -48,8 +53,8 @@ class Server:
             # ---------------------------------
 
             if name not in self.clients:
-                """DO SONTHING"""
-            
+                """DO SOMETHING"""
+
 
 
 
