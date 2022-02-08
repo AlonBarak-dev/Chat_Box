@@ -160,6 +160,7 @@ class clientGUI:
     def login(self):
 
         name = self.name_input.get()
+        # validation check for the given name
         allowed = set(string.ascii_lowercase + string.ascii_uppercase)
         if name == "":
             print("username may not be empty")
@@ -168,14 +169,18 @@ class clientGUI:
             print("username may only contain uppercase and lowercase letters")
             return False
 
+        # making sure the given address is the local host
         if self.address_input.get() != "127.0.0.1" and self.address_input.get() != "localhost":
-            print("Error you dumb hoe")
+            print("Error : try local host")
             return False
 
         address = self.address_input.get()
 
         print("logging in")
         self.client = Client(name)
+        # assigning the receive socket with the default server address and port
+        self.client.server_send_address_port = ("127.0.0.1", 55000)
+        # self.client.connect()
         self.send_button["state"] = NORMAL
 
     def show_online(self):
