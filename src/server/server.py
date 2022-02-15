@@ -1,4 +1,5 @@
 import socket
+from src.utils.message import Message
 
 
 class Server:
@@ -20,45 +21,48 @@ class Server:
         self.ip = "localhost"
         self.receive_socket.bind((self.ip, self.server_port))
 
-    def add_client(self, name):
-        if name in self.clients:
-            return False
-        port = self.get_available_port()
-        if port == None:
-            return False
-        self.clients[name] = port
-        return True
-
-    def get_available_port(self):
-        # no available ports -> return None
-        if self.available_ports is None:
-            return None
-        # return the first available port number and remove from the list
-        port_num = self.available_ports[0]
-        self.available_ports.remove(port_num)
-        return port_num
+    def send_response(self, rsp: Message):
+        print("hi")
 
     def listen(self):
-        print("listening...")
-        while True:
-            message, address = self.receive_socket.recvfrom(4096)
-            message = message.decode()
-            """
-            TO DO
-            msg : <SEQ><NAME><Message>
-            """
-            seq = message[0]
-            name = message[1]       # ignore - expected Name
-            content = message[2:]
-            # ---------------------------------
+        print("hi")
 
-            if name not in self.clients:
-                """DO SOMETHING"""
+    def connected_response(self, client_name: str):
+        rsp = Message("")  # TO DO
+        self.send_response(rsp)
+        self.listen()
 
+    def connection_failed(self, client_name: str):
+        rsp = Message("")  # TO DO
+        self.send_response(rsp)
+        self.listen()
 
+    def disconnected(self, client_name: str):
+        rsp = Message("")  # TO DO
+        self.send_response(rsp)
+        self.listen()
 
+    def msg_received(self, client_name: str):
+        rsp = Message("")  # TO DO
+        self.send_response(rsp)
+        self.listen()
 
+    def msg_sent(self, client_name: str):
+        rsp = Message("")  # TO DO
+        self.send_response(rsp)
+        self.listen()
 
+    def users_list(self, client_name: str):
+        rsp = Message("")  # TO DO
+        self.send_response(rsp)
+        self.listen()
 
-            ack_message = "Ack" + seq
-            #self.send_socket(ack_message.decode(), )
+    def files_list(self, client_name: str):
+        rsp = Message("")  # TO DO
+        self.send_response(rsp)
+        self.listen()
+
+    def downloaded(self, client_name: str):
+        rsp = Message("")  # TO DO
+        self.send_response(rsp)
+        self.listen()
