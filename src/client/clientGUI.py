@@ -5,7 +5,7 @@ from src.client.client import Client
 import string
 
 
-class clientGUI:
+class ClientGUI:
 
     def __init__(self):
         # chat window which is currently hidden
@@ -158,30 +158,7 @@ class clientGUI:
         self.Window.mainloop()
 
     def login(self):
-
-        name = self.name_input.get()
-        # validation check for the given name
-        allowed = set(string.ascii_lowercase + string.ascii_uppercase)
-        if name == "":
-            print("username may not be empty")
-            return False
-        if set(name) > allowed:
-            print("username may only contain uppercase and lowercase letters")
-            return False
-
-        # making sure the given address is the local host
-        if self.address_input.get() != "127.0.0.1" and self.address_input.get() != "localhost":
-            print("Error : try local host")
-            return False
-
-        address = self.address_input.get()
-
-        print("logging in")
-        self.client = Client(name)
-        # assigning the receive socket with the default server address and port
-        self.client.server_send_address_port = ("127.0.0.1", 55000)
-        # self.client.connect()
-        self.send_button["state"] = NORMAL
+        print("login")
 
     def show_online(self):
         print("show online")

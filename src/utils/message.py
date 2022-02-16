@@ -9,22 +9,29 @@ class Message:
             "message": "m:",
             "sender": "s:",
             "recipient": "r:",
-            "request": "q:"
+            "request": "q:",
+            "response": "p:"
         }
         self.prefix_to_key = {
             "m:": "message",
             "s:": "sender",
             "r:": "recipient",
-            "q:": "request"
+            "q:": "request",
+            "p:": "response"
         }
 
-        self.request_types = enum('connect', 'disconnect', 'get_user_list', 'get_file', 'port_request')
+        self.request_types = enum('connect', 'disconnect', 'get_user_list', 'get_file', 'port_request',
+                                  'message_request', 'download')
+
+        self.response_types = enum('connect_response', 'disconnect_response', 'user_list', 'file_list', 'port_response',
+                                   'message_response', 'download_response')
 
         self.info = {
             "message": None,  # content of the actual message
             "sender": None,  # the name of the sender
             "recipient": None,  # the name of the recipient / "all" for broadcast
-            "request": None  # connect/disconnect/get_user_list/get_file/port_request
+            "request": None,  # connect/disconnect/get_user_list/get_file/port_request
+            "response": None
         }
 
         if message is not None:
@@ -47,15 +54,27 @@ class Message:
 
     def set_sender(self, sender):
         self.info["sender"] = sender
+        return True
 
     def set_message(self, message):
-        self.info["sender"] = message
+        self.info["message"] = message
+        return True
 
     def set_receiver(self, receiver):
-        self.info["sender"] = receiver
+        self.info["recipient"] = receiver
+        return True
 
     def set_request(self, request):
-        self.info["request"] = request
+        if request is None or request in self.request_types:
+            self.info["request"] = request
+            return True
+        return False
+
+    def set_response(self, response):
+        if response is None or response in self.response_types:
+            self.info["response"] = response
+            return True
+        return False
 
     def get_sender(self):
         return self.info["sender"]
@@ -68,3 +87,6 @@ class Message:
 
     def get_request(self):
         return self.request_types[self.info["request"]]
+
+    def get_response(self):
+        return self.response_types[self.info["response"]]
