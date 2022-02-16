@@ -1,5 +1,4 @@
 import socket
-from src.server import server
 from src.utils.message import Message
 
 
@@ -11,7 +10,7 @@ class Client:
         self.client_address = None
 
         # server port
-        self.server_port = 55000
+        self.server_port = 50000
 
         # the socket for sending messages to the server
         self.send_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -64,7 +63,7 @@ class Client:
         # create a packet to send to the server
         msg = Message()
         msg.set_request(msg.request_types('connect'))
-        msg.set_sender(self.client_name)
+        msg.set_sender(self.client_name + "," + self.client_address)
 
         # send the message to the server
         self.send_msg(msg)
@@ -84,7 +83,7 @@ class Client:
         # create a message to disconnect from the server
         msg = Message()
         msg.set_request(msg.request_types('disconnect'))
-        msg.set_sender(self.client_name)
+        msg.set_sender(self.client_name + "," + self.client_address)
 
         # send the message to the server
         self.send_msg(msg)
@@ -107,7 +106,7 @@ class Client:
         # create a message asking for the list of all active users
         msg = Message()
         msg.set_request(msg.set_request('get_user_list'))
-        msg.set_sender(self.client_name)
+        msg.set_sender(self.client_name + "," + self.client_address)
 
         # send the message to the server
         self.send_msg(msg)
@@ -131,7 +130,7 @@ class Client:
         # create a message that request the server to send a private message to a specific user
         msg = Message()
         msg.set_request(msg.request_types('message_request'))
-        msg.set_sender(self.client_name)
+        msg.set_sender(self.client_name + "," + self.client_address)
         msg.set_receiver(dest)
         msg.set_message(message)
 
@@ -154,7 +153,7 @@ class Client:
         # create a message that request the server to send a message to all users connected
         msg = Message()
         msg.set_request(msg.request_types('message_request'))
-        msg.set_sender(self.client_name)
+        msg.set_sender(self.client_name + "," + self.client_address)
         msg.set_receiver('all')
         msg.set_message(message)
 
@@ -177,7 +176,7 @@ class Client:
         # create a message that request a list of all files located in the server
         msg = Message()
         msg.set_request(msg.request_types('get_file'))
-        msg.set_sender(self.client_name)
+        msg.set_sender(self.client_name + "," + self.client_address)
 
         # send the packet to the server
         self.send_msg(msg)
@@ -199,7 +198,7 @@ class Client:
         # create a message that request to download a file from the server
         msg = Message()
         msg.set_request(msg.request_types('download'))
-        msg.set_sender(self.client_name)
+        msg.set_sender(self.client_name + "," + self.client_address)
         msg.set_message(file_name)
 
         # send the message to the server
@@ -217,7 +216,6 @@ class Client:
         :param message: "<name1><name2><name3>....<nameN>" is the input for extract_list function
         :return: a list of strings -> ["name1","name2",....,"nameN"]
         """
-
         users_list = []
         users_list = message[1:-2].split("><")
         return users_list

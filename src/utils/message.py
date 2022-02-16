@@ -20,10 +20,10 @@ class Message:
             "p:": "response"
         }
 
-        self.request_types = enum('connect', 'disconnect', 'get_user_list', 'get_file', 'port_request',
+        self.request_types = enum('connect', 'disconnect', 'get_user_list', 'get_file',
                                   'message_request', 'download')
 
-        self.response_types = enum('connect_response', 'disconnect_response', 'user_list', 'file_list', 'port_response',
+        self.response_types = enum('connect_response', 'disconnect_response', 'user_list', 'file_list',
                                    'message_response', 'download_response')
 
         self.info = {
