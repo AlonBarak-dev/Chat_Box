@@ -74,11 +74,34 @@ class Server:
         """
         this method responsible to connect the client to the server
         base on the request
-        :param message: 
-        :return:
+        :param message: a message object that contain all the information about the request
+        :return: true if login successfully, else return false
         """
-        msg = Message("")  # TO DO
-        self.send_response(msg)
+        # create a response message to be send to the client
+        res_msg = Message()
+
+        # initialize the client fields
+        client_name_address = str(message.get_sender()).split(',')
+
+        flag = True
+        # look for an available port for the client
+        if len(self.available_ports) == 0:
+            flag = False   # if no available port, login failed
+        # initialize the client port and remove from available ports list
+        client_port = self.available_ports[0]
+        self.available_ports.remove(client_port)
+        # set a tuple that contain info about the client
+        client_info = (client_port, client_name_address[1])
+
+        self.clients[str(client_name_address[0])] = client_info
+        # edit the response message
+        res_msg.set_response(res_msg.response_types('connect_response'))
+        res_msg.set_sender('server' + ":127.0.0.1")
+        res_msg.set_receiver(client_name_address[0])
+        res_msg.set_message(flag)
+
+        # send the response message to the client
+        self.send_response(res_msg)
 
     def disconnected(self, message: Message):
         msg = Message("")  # TO DO
