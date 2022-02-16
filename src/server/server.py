@@ -75,7 +75,7 @@ class Server:
         this method responsible to connect the client to the server
         base on the request
         :param message: a message object that contain all the information about the request
-        :return: true if login successfully, else return false
+        :return: true message if login successfully, else return false message
         """
         # create a response message to be send to the client
         res_msg = Message()
@@ -104,8 +104,39 @@ class Server:
         self.send_response(res_msg)
 
     def disconnected(self, message: Message):
-        msg = Message("")  # TO DO
-        self.send_response(msg)
+        """
+        this method handle a disconnect request.
+        it removes the client from the users list and clode the
+        communication between the serverand the client.
+        :param message: a Message object that contains all the info about
+        the request.
+        :return: true message if login successfully, else return false message
+        """
+
+        # create a response message to be send to the client
+        res_msg = Message()
+
+        flag = True
+        # extract the name and address of the client from the message
+        client_name_address = str(message.get_sender()).split(",")
+        # free the client port
+        del_port = self.clients[client_name_address[0]]
+        self.available_ports.append(del_port)
+
+        # remove the client from the users list
+        if self.clients[client_name_address[0]] is None:
+            flag = False
+        else:
+            del self.clients[client_name_address[0]]
+
+        # edit the response message
+        res_msg.set_message(res_msg.response_types('disconnect_response'))
+        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_receiver(client_name_address[0])
+        res_msg.set_message(flag)
+
+        # send the message to the client
+        self.send_response(res_msg)
 
     def msg_received(self, message: Message):
         msg = Message("")  # TO DO
