@@ -64,8 +64,6 @@ class Server:
         elif msg_type == 'get_file':
             self.files_list(msg_obj)
         elif msg_type == 'message_request':
-            # felt cute, might delete later
-            self.msg_received(msg_obj)
             self.msg_sent(msg_obj)
         elif msg_type == 'download':
             self.downloaded(msg_obj)
@@ -161,10 +159,32 @@ class Server:
         self.send_response(res_msg)
 
         return True
-        
+
     def msg_sent(self, message: Message):
-        msg = Message("")  # TO DO
-        self.send_response(msg)
+        """
+        this method is called once a client want to send a private/public message.
+        if private, the method will call the self.message_received method on the specific
+        client.
+        if all, the method will call the self.message_received method on every single client
+        that connected to the server at the moment
+        :param message: the message that contains all the infomation about the
+        message request
+        :return: A true message if success. False otherwise.
+        """
+
+        # create a message to be sent once the server finish the process
+        res_msg = Message()
+
+        # check if the message is private or broadcast
+        message_type = message.get_receiver()
+        if message_type == 'all':
+            print("")
+            # send broadcast
+        else:
+            print("")
+            # send to desired client
+
+
 
     def users_list(self, message: Message):
         msg = Message("")  # TO DO
