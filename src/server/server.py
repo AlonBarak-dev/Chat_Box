@@ -138,10 +138,30 @@ class Server:
         # send the message to the client
         self.send_response(res_msg)
 
-    def msg_received(self, message: Message):
-        msg = Message("")  # TO DO
-        self.send_response(msg)
+    def msg_received(self, message: Message, user_name: str):
+        """
+        this method is responsible on sending a message to a specific user.
+        :param message: a message object that contains the content wanted to be delivered
+        :param user_name: the client which will get the message
+        :return: true if sent, false if not
+        """
 
+        # check if the desired user is a client
+        if user_name not in self.clients:
+            return False
+
+        # create a message that will be delivered to the chosen client
+        res_msg = Message()
+        res_msg.set_response(res_msg.response_types('message_response'))
+        res_msg.set_message(message.get_message())
+        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_receiver(user_name)
+
+        # send the message to the client
+        self.send_response(res_msg)
+
+        return True
+        
     def msg_sent(self, message: Message):
         msg = Message("")  # TO DO
         self.send_response(msg)
