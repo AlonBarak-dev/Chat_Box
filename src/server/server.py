@@ -217,12 +217,28 @@ class Server:
         res_msg.set_receiver(str(message.get_sender()).split(',')[0])
         res_msg.set_response(res_msg.response_types('user_list'))
 
-        # sent the message to the client
+        # send the message to the client
         self.send_response(res_msg)
 
     def files_list(self, message: Message):
-        msg = Message("")  # TO DO
-        self.send_response(msg)
+        """
+        this method return a list of all files available to download which located at the server.
+        :param message: a message object contains all the info about the clients request
+        :return: a list of string ['ffile1',file2',....'fileN']
+        """
+
+        # create a response message to be send to the client
+        res_msg = Message()
+
+        # edit the response message base on the data
+        res_msg.set_message(self.file_list)
+        res_msg.set_response((res_msg.response_types('file_list')))
+        res_msg.set_receiver(str(message.get_sender()).split(',')[0])
+        res_msg.set_sender("server:127.0.0.1")
+
+        # send the response message to the client
+        self.send_response(res_msg)
+
 
     def downloaded(self, message: Message):
         msg = Message("")  # TO DO
