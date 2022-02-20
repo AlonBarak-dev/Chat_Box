@@ -1,3 +1,4 @@
+import os
 import socket
 from src.utils.message import Message
 
@@ -30,7 +31,7 @@ class Server:
         :param msg: a message object that contains all the information og the packet
         """
         dest_client = msg.get_receiver()
-        dest_tuple = self.clients[dest_client]       # the port of the edge user
+        dest_tuple = self.clients[dest_client]  # the port of the edge user
 
         # convert the message object to a string
         msg_bytes = msg.to_string().encode()
@@ -84,7 +85,7 @@ class Server:
         flag = True
         # look for an available port for the client
         if len(self.available_ports) == 0:
-            flag = False   # if no available port, login failed
+            flag = False  # if no available port, login failed
         # initialize the client port and remove from available ports list
         client_port = self.available_ports[0]
         self.available_ports.remove(client_port)
@@ -239,7 +240,30 @@ class Server:
         # send the response message to the client
         self.send_response(res_msg)
 
-
     def downloaded(self, message: Message):
-        msg = Message("")  # TO DO
-        self.send_response(msg)
+        """
+        this method transfer a stream of bytes that represent a file in the server to the client.
+        :param message: a message object tha contains all the info about the client request
+        :return: a message that contains a file as a stream of bytes.
+                return 'ERR' in case the file does not exist in the server
+        """
+
+        # create a response message to be send to the client
+        res_msg = Message()
+
+        # if the file doesnt exist in the server return an error message
+        if not os.path.exists(str(message.get_message())):
+            res_msg.set_message("ERR")
+
+        # if the file exist
+        if message.get_message() != '':
+            file = open(message.get_message(), 'rb')
+            res_msg.set_message(file.read())
+
+        # edit the message base on the data
+        res_msg.set_response((res_msg.response_types('download_response')))
+        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_receiver(str(message.get_sender()).split(',')[0])
+
+        # send the message to the client
+        self.send_response(res_msg)
