@@ -23,6 +23,7 @@ class Client:
         self.connected = False
         self.listener = False
         self.msg_listen = threading.Thread(target=self.listen_msg)
+        self.msg_list = []
 
 
     def send_msg(self, message: Message):
@@ -61,7 +62,9 @@ class Client:
             res_msg.load(msg)
             if res_msg.get_response() == 'message_received':
                 print("received message")
-                print(self.msg_received(res_msg.get_sender(), res_msg))
+                message = self.msg_received(res_msg.get_sender(), res_msg)
+                print(message)
+                self.msg_list.append(message)
 
     def login(self, name: str, address: str):
         """

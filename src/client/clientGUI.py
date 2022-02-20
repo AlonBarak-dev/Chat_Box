@@ -161,7 +161,6 @@ class ClientGUI:
 
         self.client = None
         self.Window.mainloop()
-        # self.msg_thread = None
 
     def login(self):
         self.client = Client()
@@ -175,13 +174,14 @@ class ClientGUI:
             self.logout_button.place(relx=0.5, rely=0.005)
             self.logout_button["state"] = NORMAL
             self.display_chat.insert(END, "Welcome, " + self.client.client_name + "\n")
+            self.display_chat.bind('<Return>', self.check_msg)
 
-    # def msg_listener(self):
-    #     while True:
-    #         input_from_users = self.client.listen_msg()
-    #         if input_from_users:
-    #             self.display_chat.insert(END, input_from_users + "\n")
+    def check_msg(self, event=None):
 
+        print(len(self.client.msg_list))
+        while len(self.client.msg_list) != 0:
+            self.display_chat.insert(END, self.client.msg_list[0] + "\n")
+            del self.client.msg_list[0]
 
     def logout(self):
         self.client.logout()
@@ -212,9 +212,8 @@ class ClientGUI:
             flag = self.client.public_msg(message)
         else:
             flag = self.client.private_msg(message=message, dest= user_name)
+        self.check_msg()
 
-        if flag:
-            self.display_chat.insert(END, self.client.client_name + ": " + message)
 
 
 

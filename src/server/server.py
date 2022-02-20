@@ -206,7 +206,7 @@ class Server:
         res_msg = Message()
         res_msg.set_response('message_received')
         res_msg.set_message(message.get_message())
-        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_sender(message.get_sender())
         res_msg.set_receiver(user_name)
         # send the message to the client
         self.send_response(res_msg)
