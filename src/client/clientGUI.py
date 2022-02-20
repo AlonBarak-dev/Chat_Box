@@ -1,4 +1,5 @@
 import threading
+import tkinter.tix
 from tkinter import *
 from src.server.server import Server
 from src.client.client import Client
@@ -15,6 +16,10 @@ class ClientGUI:
         self.login_button = Button(self.Window, text="login", command=lambda: self.login())
         self.login_button.place(relx=0.0,
                                 rely=0.005)
+        # logout button
+        self.logout_button = Button(self.Window, text="logout", command=lambda: self.logout())
+        self.logout_button["state"] = DISABLED
+
         # name label
         self.name_label = Label(self.Window,
                                 text="name",
@@ -160,6 +165,16 @@ class ClientGUI:
     def login(self):
         self.client = Client()
         self.client.login(self.name_input.get(), self.address_input.get())
+        self.show_online_button["state"] = NORMAL
+        self.download_button["state"] = NORMAL
+        self.send_button["state"] = NORMAL
+        self.show_server_files_button["state"] = NORMAL
+        self.login_button["state"] = DISABLED
+        self.login_button.place(relx=0.7, rely=0.005)
+        self.logout_button["state"] = NORMAL
+
+    def logout(self):
+        self.client.logout()
 
     def show_online(self):
         print("show online")
