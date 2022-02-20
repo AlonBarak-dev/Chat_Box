@@ -41,7 +41,7 @@ class Message:
     def load(self, message):
         fields = message[1:-2].split("><")
         for field in fields:
-            self.info[self.prefix_to_key[field[0: 2]]] = field[2, -1]
+            self.info[self.prefix_to_key[field[0: 2]]] = field[2: -1]
 
     # makes a string out of the message
     def to_string(self):
@@ -86,7 +86,7 @@ class Message:
         return self.info["sender"]
 
     def get_request(self):
-        return self.request_types[self.info["request"]]
+        return self.info["request"]
 
     def get_response(self):
-        return self.response_types[self.info["response"]]
+        return self.info["response"]

@@ -16,6 +16,8 @@ class Client:
         # the socket for sending messages to the server
         self.send_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.server_send_address_port = ("127.0.0.1", self.server_port)  # the server port
+        # debug
+        self.send_socket.connect(self.server_send_address_port)
 
         # the socket for receiving messages from the server
         self.receive_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
