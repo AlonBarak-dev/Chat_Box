@@ -15,7 +15,8 @@ class Server:
         self.file_list = []
 
         # Create a datagram socket
-        self.receive_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        self.receive_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
+        self.receive_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # bind the receive socket
         self.server_port = 50000
         self.ip = "127.0.0.1"
@@ -36,7 +37,7 @@ class Server:
         # convert the message object to a string
         msg_bytes = msg.to_string().encode()
         # send the message to the desired client
-        self.clients[str(dest_client)][0].send(msg_bytes)
+        self.clients[str(dest_client)].send(msg_bytes)
 
     def run_client(self, sock, address, client_id):
         """
@@ -44,18 +45,23 @@ class Server:
         client request. for example, if the request is a connect type then this method will call
         to the connection response function.
         """
+
         while True:
             # listen to a packet from the clients
-            msg, address = self.receive_socket.recvfrom(8192)
+            msg = sock.recv(65536)
+
             # convert the bytes to string
             msg = msg.decode()
+
             # convert from string to a message object
             msg_obj = Message()
             msg_obj.load(msg)
 
             # investigate the message request
-            msg_type = msg_obj.get_request()
-
+            msg_type = str(msg_obj.get_request())
+            # debug
+            print(msg_type)
+            # check the message type
             if msg_type == 'connect':
                 self.connected_response(msg_obj, client_id)
             elif msg_type == 'disconnect':
@@ -76,11 +82,12 @@ class Server:
         while True:
             # accept a connection from a client
             sock, address = self.receive_socket.accept()
+            print("accepted a client")
             # temporary key for the socket
             self.clients[str(self.new_client_id)] = sock
-            self.new_client_id += 1
             # create a new thread for the new client and start it
-            client_thread = threading.Thread(target=self.run_client, args=(sock, address,str(self.new_client_id),))
+            client_thread = threading.Thread(target=self.run_client, args=(sock, address, str(self.new_client_id),))
+            self.new_client_id += 1
             client_thread.start()
 
 
@@ -134,7 +141,10 @@ class Server:
         if client_name in self.clients.keys():
             flag = False
         # set the name of the client as the key to its socket
-        self.clients[client_name] = self.clients.pop(client_id)
+        print(self.clients)
+        data = self.clients[client_id]
+        del self.clients[client_id]
+        self.clients['' + client_name] = data
         # edit the response message
         res_msg.set_response('connect_response')
         res_msg.set_sender('server:127.0.0.1')
@@ -143,6 +153,15 @@ class Server:
 
         # send the response message to the client
         self.send_response(res_msg)
+        print("success")
+
+        # if flag:
+        #     # send a welcome message
+        #     broadcast_msg = Message()
+        #     broadcast_msg.set_message("New user has joined! Welcome " + client_name)
+        #     broadcast_msg.set_receiver('all')
+        #     broadcast_msg.set_sender('server')
+        #     self.msg_sent(broadcast_msg)
 
     def disconnected(self, message: Message):
         """

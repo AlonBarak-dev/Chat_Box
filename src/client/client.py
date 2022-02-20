@@ -14,7 +14,7 @@ class Client:
         self.server_port = 50000
 
         # the socket for receiving messages from the server
-        self.server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        self.server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         self.server_address_port = ('127.0.0.1', self.server_port)
 
         # false if doesnt connected to a server, True if does
@@ -30,12 +30,14 @@ class Client:
         this method listens to the server and translate the server's response into Message Objects
         :return: Message object
         """
-        # receive the response packet from the server
-        msg = self.server_socket.recv(8192)
-        msg = msg.decode()
-        res_msg = Message()
-        res_msg.load(msg)
-        return res_msg
+        while True:
+            # receive the response packet from the server
+            msg = self.server_socket.recv(65536)
+            msg = msg.decode()
+            res_msg = Message()
+            res_msg.load(msg)
+            print("return answer" + str(res_msg.get_message()))
+            return res_msg
 
     def login(self, name: str, address: str):
         """
@@ -55,6 +57,7 @@ class Client:
 
         # send the message to the server
         self.send_msg(msg)
+        print("sent message to the server to login")
         # listen to the server response
         login_response = self.listen()
         return login_response.get_message()

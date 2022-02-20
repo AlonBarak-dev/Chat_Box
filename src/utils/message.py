@@ -39,9 +39,9 @@ class Message:
 
     # gets a message as a string and loads the data into the fields of the object
     def load(self, message):
-        fields = message[1:-2].split("><")
+        fields = message[1:-1].split("><")
         for field in fields:
-            self.info[self.prefix_to_key[field[0: 2]]] = field[2: -1]
+            self.info[self.prefix_to_key[field[0: 2]]] = field[2:]
 
     # makes a string out of the message
     def to_string(self):
@@ -80,10 +80,10 @@ class Message:
         return self.info["sender"]
 
     def get_message(self):
-        return self.info["sender"]
+        return self.info["message"]
 
     def get_receiver(self):
-        return self.info["sender"]
+        return self.info["recipient"]
 
     def get_request(self):
         return self.info["request"]

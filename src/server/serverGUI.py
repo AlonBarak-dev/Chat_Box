@@ -18,6 +18,6 @@ class serverGUI:
 
     def start(self):
         server = Server()
-        server_thread = threading.Thread(target=server.listen)
+        server_thread = threading.Thread(target=server.listen2)
         server_thread.start()
         print("server is ready..")
