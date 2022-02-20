@@ -1,3 +1,4 @@
+import os
 import socket
 from src.utils.message import Message
 
@@ -204,10 +205,24 @@ class Client:
         # send the message to the server
         self.send_msg(msg)
         # listen to the server response
-        response_msg = self.listen()
-        # still not perfect, might change later
-        response_msg = response_msg.get_message()
-        return response_msg
+        response_msg: Message = self.listen()
+
+        # in case the file doesn't exist, return false
+        if response_msg.get_message() == "ERR":
+            return False
+        else:
+            # create a file name
+            write_name = 'Server_' + file_name
+            # if the file already located at the client, delete it and re-download
+            if os.path.exists(write_name):
+                os.remove(write_name)
+
+            # create the file
+            with open(write_name, 'wb') as file:
+                # write the data in the new file
+                data = response_msg.get_message()
+                file.write(data)
+        return True
 
     def extract_list(self, message: str) -> list:
         """
