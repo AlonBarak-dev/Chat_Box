@@ -172,31 +172,23 @@ class Server:
         the request.
         :return: true message if login successfully, else return false message
         """
+        # debug
+        print("logout try")
 
-        # create a response message to be send to the client
+        # create a message to be sent to the client
         res_msg = Message()
-
-        flag = True
-        # extract the name and address of the client from the message
-        client_name_address = str(message.get_sender()).split(",")
-        # free the client port
-        del_port = self.clients[client_name_address[0]]
-        self.available_ports.append(del_port)
-
-        # remove the client from the users list
-        if self.clients[client_name_address[0]] is None:
-            flag = False
+        res_msg.set_response('disconnect_response')
+        res_msg.set_receiver(message.get_sender())
+        res_msg.set_sender("sender:127.0.0.1")
+        # delete the client if exist
+        if message.get_sender() in self.clients:
+            res_msg.set_message(True)
         else:
-            del self.clients[client_name_address[0]]
-
-        # edit the response message
-        res_msg.set_message('disconnect_response')
-        res_msg.set_sender("server:127.0.0.1")
-        res_msg.set_receiver(client_name_address[0])
-        res_msg.set_message(flag)
-
+            res_msg.set_message(False)
         # send the message to the client
+        print("sending a logout message reply")
         self.send_response(res_msg)
+        del self.clients[message.get_sender()]
 
     def msg_received(self, message: Message, user_name: str):
         """

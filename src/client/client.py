@@ -60,6 +60,7 @@ class Client:
         print("sent message to the server to login")
         # listen to the server response
         login_response = self.listen()
+        self.connected = True
         return login_response.get_message()
 
     def logout(self):
@@ -70,7 +71,7 @@ class Client:
         # create a message to disconnect from the server
         msg = Message()
         msg.set_request('disconnect')
-        msg.set_sender(self.client_name + "," + self.client_address)
+        msg.set_sender(self.client_name)
 
         # send the message to the server
         self.send_msg(msg)
@@ -80,7 +81,6 @@ class Client:
         # if the logout process was successful then disconnect from the server and return true
         # else, return False
         if response_msg is True:
-            self.server_receive_address_port = None
             self.connected = False  # disconnect from the server
             return True
         return False

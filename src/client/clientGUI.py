@@ -164,17 +164,27 @@ class ClientGUI:
 
     def login(self):
         self.client = Client()
-        self.client.login(self.name_input.get(), self.address_input.get())
-        self.show_online_button["state"] = NORMAL
-        self.download_button["state"] = NORMAL
-        self.send_button["state"] = NORMAL
-        self.show_server_files_button["state"] = NORMAL
-        self.login_button["state"] = DISABLED
-        self.login_button.place(relx=0.7, rely=0.005)
-        self.logout_button["state"] = NORMAL
+
+        if self.client.login(self.name_input.get(), self.address_input.get()):
+            self.show_online_button["state"] = NORMAL
+            self.download_button["state"] = NORMAL
+            self.send_button["state"] = NORMAL
+            self.show_server_files_button["state"] = NORMAL
+            self.login_button["state"] = DISABLED
+            self.logout_button.place(relx=0.5, rely=0.005)
+            self.logout_button["state"] = NORMAL
+            self.display_chat.insert(END, "Welcome, " + self.client.client_name + "\n")
 
     def logout(self):
         self.client.logout()
+        self.login_button["state"] = NORMAL
+        self.display_chat.insert(END, "Good Bye, " + self.client.client_name + "\n")
+        self.logout_button["state"] = DISABLED
+        self.show_online_button["state"] = DISABLED
+        self.download_button["state"] = DISABLED
+        self.send_button["state"] = DISABLED
+        self.show_server_files_button["state"] = DISABLED
+        self.logout_button.place(relx=0.0, rely=0.005)
 
     def show_online(self):
         print("show online")
