@@ -65,13 +65,13 @@ class Message:
         return True
 
     def set_request(self, request):
-        if request is None or request in self.request_types:
+        if request is not None:
             self.info["request"] = request
             return True
         return False
 
     def set_response(self, response):
-        if response is None or response in self.response_types:
+        if response is not None:
             self.info["response"] = response
             return True
         return False
