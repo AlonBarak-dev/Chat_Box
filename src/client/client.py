@@ -13,23 +13,17 @@ class Client:
         # server port
         self.server_port = 50000
 
-        # the socket for sending messages to the server
-        self.send_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.server_send_address_port = ("127.0.0.1", self.server_port)  # the server port
-        # debug
-        self.send_socket.connect(self.server_send_address_port)
-
         # the socket for receiving messages from the server
-        self.receive_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.server_receive_address_port = None
+        self.server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        self.server_address_port = ('127.0.0.1', self.server_port)
 
         # false if doesnt connected to a server, True if does
         self.connected = False
 
     def send_msg(self, message: Message):
 
-        msg_str = message.to_string()  # felt cute, might delete later
-        self.send_socket.sendto(msg_str.encode(), self.server_send_address_port)
+        msg_bytes = message.to_string().encode()  # felt cute, might delete later
+        self.server_socket.send(msg_bytes)
 
     def listen(self) -> Message:
         """
@@ -37,23 +31,11 @@ class Client:
         :return: Message object
         """
         # receive the response packet from the server
-        msg, address = self.receive_socket.recvfrom(4096)
+        msg = self.server_socket.recv(8192)
         msg = msg.decode()
         res_msg = Message()
         res_msg.load(msg)
         return res_msg
-
-    def update_port(self, msg_login: Message):
-        """
-        this method request the server for the given receive port
-        :return: the port number
-        """
-        port = msg_login.get_message()
-        if port != 0:
-            # connect the client and the server with a socket
-            self.server_receive_address_port = (self.client_address, port)
-            self.receive_socket.bind(self.server_receive_address_port)
-        return port
 
     def login(self, name: str, address: str):
         """
@@ -66,17 +48,16 @@ class Client:
         # create a packet to send to the server
         msg = Message()
         msg.set_request('connect')
-        msg.set_sender(self.client_name + "," + self.client_address)
+        msg.set_sender(self.client_name)
+
+        # connect to the server
+        self.server_socket.connect(self.server_address_port)
 
         # send the message to the server
         self.send_msg(msg)
         # listen to the server response
         login_response = self.listen()
-        # check if the connection were successful or not
-        if self.update_port(login_response) == 0:
-            return False
-        self.connected = True
-        return True
+        return login_response.get_message()
 
     def logout(self):
         """

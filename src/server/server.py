@@ -1,5 +1,7 @@
 import os
 import socket
+import threading
+
 from src.utils.message import Message
 
 
@@ -7,22 +9,21 @@ class Server:
 
     def __init__(self):
         # a dict to hold all of the connected clients
-        # {"client_name": (client_PORT, client_address)}
+        # {"client_name": client_sock}
         self.clients = {}
         # list of all files located in the server
         self.file_list = []
 
-        # a list of available ports for new clients
-        self.available_ports = [55000 + i for i in range(16)]
-
         # Create a datagram socket
         self.receive_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.send_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-
         # bind the receive socket
         self.server_port = 50000
         self.ip = "127.0.0.1"
         self.receive_socket.bind((self.ip, self.server_port))
+
+        self.receive_socket.listen(15)
+        self.new_client_id = 1
+
 
     def send_response(self, msg: Message):
         """
@@ -30,13 +31,58 @@ class Server:
         responsible for sending the message to the desired client
         :param msg: a message object that contains all the information og the packet
         """
+        # get the client info
         dest_client = msg.get_receiver()
-        dest_tuple = self.clients[dest_client]  # the port of the edge user
-
         # convert the message object to a string
         msg_bytes = msg.to_string().encode()
         # send the message to the desired client
-        self.send_socket.sendto(msg_bytes, dest_tuple)
+        self.clients[str(dest_client)][0].send(msg_bytes)
+
+    def run_client(self, sock, address, client_id):
+        """
+        this method listening to messages from all clients and call the specific function that can handle the
+        client request. for example, if the request is a connect type then this method will call
+        to the connection response function.
+        """
+        while True:
+            # listen to a packet from the clients
+            msg, address = self.receive_socket.recvfrom(8192)
+            # convert the bytes to string
+            msg = msg.decode()
+            # convert from string to a message object
+            msg_obj = Message()
+            msg_obj.load(msg)
+
+            # investigate the message request
+            msg_type = msg_obj.get_request()
+
+            if msg_type == 'connect':
+                self.connected_response(msg_obj, client_id)
+            elif msg_type == 'disconnect':
+                self.disconnected(msg_obj)
+            elif msg_type == 'get_user_list':
+                self.users_list(msg_obj)
+            elif msg_type == 'get_file':
+                self.files_list(msg_obj)
+            elif msg_type == 'message_request':
+                self.msg_sent(msg_obj)
+            elif msg_type == 'download':
+                self.downloaded(msg_obj)
+
+    def listen2(self):
+        """
+        this method is responsible for accepting connect requests from clients
+        """
+        while True:
+            # accept a connection from a client
+            sock, address = self.receive_socket.accept()
+            # temporary key for the socket
+            self.clients[str(self.new_client_id)] = sock
+            self.new_client_id += 1
+            # create a new thread for the new client and start it
+            client_thread = threading.Thread(target=self.run_client, args=(sock, address,str(self.new_client_id),))
+            client_thread.start()
+
 
     def listen(self):
         """
@@ -69,7 +115,7 @@ class Server:
         elif msg_type == 'download':
             self.downloaded(msg_obj)
 
-    def connected_response(self, message: Message):
+    def connected_response(self, message: Message, client_id):
         """
         this method responsible to connect the client to the server
         base on the request
@@ -83,23 +129,16 @@ class Server:
         res_msg = Message()
 
         # initialize the client fields
-        client_name_address = str(message.get_sender()).split(',')
-
         flag = True
-        # look for an available port for the client
-        if len(self.available_ports) == 0:
-            flag = False  # if no available port, login failed
-        # initialize the client port and remove from available ports list
-        client_port = self.available_ports[0]
-        self.available_ports.remove(client_port)
-        # set a tuple that contain info about the client
-        client_info = (client_port, client_name_address[1])
-
-        self.clients[str(client_name_address[0])] = client_info
+        client_name = str(message.get_sender())
+        if client_name in self.clients.keys():
+            flag = False
+        # set the name of the client as the key to its socket
+        self.clients[client_name] = self.clients.pop(client_id)
         # edit the response message
         res_msg.set_response('connect_response')
-        res_msg.set_sender('server' + ":127.0.0.1")
-        res_msg.set_receiver(client_name_address[0])
+        res_msg.set_sender('server:127.0.0.1')
+        res_msg.set_receiver(client_name)
         res_msg.set_message(flag)
 
         # send the response message to the client
