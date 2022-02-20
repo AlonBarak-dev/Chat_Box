@@ -174,18 +174,26 @@ class Server:
 
         # create a message to be sent once the server finish the process
         res_msg = Message()
-
+        sent_flag = True
         # check if the message is private or broadcast
-        message_type = message.get_receiver()
-        if message_type == 'all':
-            print("")
+        message_dest = message.get_receiver()
+        if message_dest == 'all':
             # send broadcast
+            # loop over the server's clients and send the message for each one of them
+            for client in self.clients.keys():
+                sent_flag = self.msg_received(message, client)
         else:
-            print("")
-            # send to desired client
+            # send the message to the specific client
+            sent_flag = self.msg_received(message, message_dest)
 
-
-
+        # edit the message base on the data
+        res_msg.set_message(res_msg)
+        res_msg.set_response(res_msg.response_types('message_response'))
+        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_receiver(str(message.get_sender()).split(',')[0])
+        # send the response message back to the sender
+        self.send_response(res_msg)
+        
     def users_list(self, message: Message):
         msg = Message("")  # TO DO
         self.send_response(msg)
