@@ -76,6 +76,9 @@ class Server:
         :param message: a message object that contain all the information about the request
         :return: true message if login successfully, else return false message
         """
+        # debug
+        print("login try")
+
         # create a response message to be send to the client
         res_msg = Message()
 
@@ -94,7 +97,7 @@ class Server:
 
         self.clients[str(client_name_address[0])] = client_info
         # edit the response message
-        res_msg.set_response(res_msg.response_types('connect_response'))
+        res_msg.set_response('connect_response')
         res_msg.set_sender('server' + ":127.0.0.1")
         res_msg.set_receiver(client_name_address[0])
         res_msg.set_message(flag)
@@ -129,7 +132,7 @@ class Server:
             del self.clients[client_name_address[0]]
 
         # edit the response message
-        res_msg.set_message(res_msg.response_types('disconnect_response'))
+        res_msg.set_message('disconnect_response')
         res_msg.set_sender("server:127.0.0.1")
         res_msg.set_receiver(client_name_address[0])
         res_msg.set_message(flag)
@@ -151,7 +154,7 @@ class Server:
 
         # create a message that will be delivered to the chosen client
         res_msg = Message()
-        res_msg.set_response(res_msg.response_types('message_response'))
+        res_msg.set_response('message_response')
         res_msg.set_message(message.get_message())
         res_msg.set_sender("server:127.0.0.1")
         res_msg.set_receiver(user_name)
@@ -189,7 +192,7 @@ class Server:
 
         # edit the message base on the data
         res_msg.set_message(res_msg)
-        res_msg.set_response(res_msg.response_types('message_response'))
+        res_msg.set_response('message_response')
         res_msg.set_sender("server:127.0.0.1")
         res_msg.set_receiver(str(message.get_sender()).split(',')[0])
         # send the response message back to the sender
@@ -216,7 +219,7 @@ class Server:
         res_msg.set_message(users_list)
         res_msg.set_sender("server:127.0.0.1")
         res_msg.set_receiver(str(message.get_sender()).split(',')[0])
-        res_msg.set_response(res_msg.response_types('user_list'))
+        res_msg.set_response('user_list')
 
         # send the message to the client
         self.send_response(res_msg)
@@ -233,7 +236,7 @@ class Server:
 
         # edit the response message base on the data
         res_msg.set_message(self.file_list)
-        res_msg.set_response((res_msg.response_types('file_list')))
+        res_msg.set_response('file_list')
         res_msg.set_receiver(str(message.get_sender()).split(',')[0])
         res_msg.set_sender("server:127.0.0.1")
 
@@ -261,7 +264,7 @@ class Server:
             res_msg.set_message(file.read())
 
         # edit the message base on the data
-        res_msg.set_response((res_msg.response_types('download_response')))
+        res_msg.set_response('download_response')
         res_msg.set_sender("server:127.0.0.1")
         res_msg.set_receiver(str(message.get_sender()).split(',')[0])
 

@@ -16,8 +16,8 @@ class serverGUI:
 
         self.Window.mainloop()
 
-
     def start(self):
         server = Server()
         server_thread = threading.Thread(target=server.listen)
         server_thread.start()
+        print("server is ready..")

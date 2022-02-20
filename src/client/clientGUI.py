@@ -158,7 +158,8 @@ class ClientGUI:
         self.Window.mainloop()
 
     def login(self):
-        print("login")
+        self.client = Client()
+        self.client.login(self.name_input.get(), self.address_input.get())
 
     def show_online(self):
         print("show online")

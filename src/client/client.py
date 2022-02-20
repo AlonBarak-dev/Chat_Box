@@ -63,7 +63,7 @@ class Client:
         self.client_address = address
         # create a packet to send to the server
         msg = Message()
-        msg.set_request(msg.request_types('connect'))
+        msg.set_request('connect')
         msg.set_sender(self.client_name + "," + self.client_address)
 
         # send the message to the server
@@ -83,7 +83,7 @@ class Client:
         """
         # create a message to disconnect from the server
         msg = Message()
-        msg.set_request(msg.request_types('disconnect'))
+        msg.set_request('disconnect')
         msg.set_sender(self.client_name + "," + self.client_address)
 
         # send the message to the server
@@ -106,7 +106,7 @@ class Client:
         """
         # create a message asking for the list of all active users
         msg = Message()
-        msg.set_request(msg.set_request('get_user_list'))
+        msg.set_request('get_user_list')
         msg.set_sender(self.client_name + "," + self.client_address)
 
         # send the message to the server
@@ -130,7 +130,7 @@ class Client:
 
         # create a message that request the server to send a private message to a specific user
         msg = Message()
-        msg.set_request(msg.request_types('message_request'))
+        msg.set_request('message_request')
         msg.set_sender(self.client_name + "," + self.client_address)
         msg.set_receiver(dest)
         msg.set_message(message)
@@ -153,7 +153,7 @@ class Client:
 
         # create a message that request the server to send a message to all users connected
         msg = Message()
-        msg.set_request(msg.request_types('message_request'))
+        msg.set_request('message_request')
         msg.set_sender(self.client_name + "," + self.client_address)
         msg.set_receiver('all')
         msg.set_message(message)
@@ -176,7 +176,7 @@ class Client:
 
         # create a message that request a list of all files located in the server
         msg = Message()
-        msg.set_request(msg.request_types('get_file'))
+        msg.set_request('get_file')
         msg.set_sender(self.client_name + "," + self.client_address)
 
         # send the packet to the server
@@ -198,7 +198,7 @@ class Client:
 
         # create a message that request to download a file from the server
         msg = Message()
-        msg.set_request(msg.request_types('download'))
+        msg.set_request('download')
         msg.set_sender(self.client_name + "," + self.client_address)
         msg.set_message(file_name)
 
