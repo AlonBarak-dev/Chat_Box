@@ -193,10 +193,32 @@ class Server:
         res_msg.set_receiver(str(message.get_sender()).split(',')[0])
         # send the response message back to the sender
         self.send_response(res_msg)
-        
+
     def users_list(self, message: Message):
-        msg = Message("")  # TO DO
-        self.send_response(msg)
+        """
+        this method return a response message that contains a list with all the server's client's names
+        ['name1','name2',....'nameN']
+        :param message: a message object containing all the info about the
+        client request
+        :return: a message with list of strings
+        """
+
+        # create a response message to be sent to the client
+        res_msg = Message()
+
+        # create a list with all user's names
+        users_list = []
+        for name in self.clients.keys():
+            users_list.append(name)
+
+        # edit the response message base on the data
+        res_msg.set_message(users_list)
+        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_receiver(str(message.get_sender()).split(',')[0])
+        res_msg.set_response(res_msg.response_types('user_list'))
+
+        # sent the message to the client
+        self.send_response(res_msg)
 
     def files_list(self, message: Message):
         msg = Message("")  # TO DO
