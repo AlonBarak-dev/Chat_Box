@@ -28,7 +28,6 @@ class Client:
 
     def send_msg(self, message: Message):
 
-        print(message.to_string())
         msg_bytes = message.to_string().encode()  # felt cute, might delete later
         self.server_socket.send(msg_bytes)
 
@@ -43,11 +42,13 @@ class Client:
             msg = msg.decode()
             res_msg = Message()
             res_msg.load(msg)
-            print(res_msg.to_string())
+            print("Main: " + res_msg.to_string() + "\n")
             if res_msg.get_response() == 'message_received':
-                self.msg_received(res_msg.get_sender(), res_msg)
+                self.msg_list.append(self.msg_received(res_msg.get_sender(), res_msg))
                 continue
-            print("return answer" + str(res_msg.get_message()))
+            if res_msg.get_message() == "spam":
+                continue
+
             return res_msg
 
     def listen_msg(self):
@@ -60,10 +61,9 @@ class Client:
             msg = msg.decode()
             res_msg = Message()
             res_msg.load(msg)
+            print("Message: " + res_msg.to_string() + "\n")
             if res_msg.get_response() == 'message_received':
-                print("received message")
                 message = self.msg_received(res_msg.get_sender(), res_msg)
-                print(message)
                 self.msg_list.append(message)
 
     def login(self, name: str, address: str):
@@ -84,7 +84,7 @@ class Client:
 
         # send the message to the server
         self.send_msg(msg)
-        print("sent message to the server to login")
+
         # listen to the server response
         login_response = self.listen()
         self.connected = True
@@ -124,12 +124,14 @@ class Client:
         # create a message asking for the list of all active users
         msg = Message()
         msg.set_request('get_user_list')
-        msg.set_sender(self.client_name + "," + self.client_address)
+        msg.set_sender(self.client_name)
 
         # send the message to the server
         self.send_msg(msg)
         # listen to the response from the server
+        self.listener = False
         response_msg = self.listen()
+        self.listener = True
         # extract the message content from the packet
         response_msg = response_msg.get_message()
         # "<name1><name2><name3>....<nameN>" is the input for extract_list function

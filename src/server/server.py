@@ -60,8 +60,7 @@ class Server:
 
             # investigate the message request
             msg_type = str(msg_obj.get_request())
-            # debug
-            print(msg_type)
+
             # check the message type
             if msg_type == 'connect':
                 self.connected_response(msg_obj, client_id)
@@ -83,45 +82,13 @@ class Server:
         while True:
             # accept a connection from a client
             sock, address = self.receive_socket.accept()
-            print("accepted a client")
+
             # temporary key for the socket
             self.clients[str(self.new_client_id)] = sock
             # create a new thread for the new client and start it
             client_thread = threading.Thread(target=self.run_client, args=(sock, address, str(self.new_client_id),))
             self.new_client_id += 1
             client_thread.start()
-
-
-    def listen(self):
-        """
-        this method listening to messages from all clients and call the specific function that can handle the
-        client request. for example, if the request is a connect type then this method will call
-        to the connection response function.
-        """
-
-        # listen to a packet from the clients
-        msg, address = self.receive_socket.recvfrom(4096)
-        # convert the bytes to string
-        msg = msg.decode()
-        # convert from string to a message object
-        msg_obj = Message()
-        msg_obj.load(msg)
-
-        # investigate the message request
-        msg_type = msg_obj.get_request()
-
-        if msg_type == 'connect':
-            self.connected_response(msg_obj)
-        elif msg_type == 'disconnect':
-            self.disconnected(msg_obj)
-        elif msg_type == 'get_user_list':
-            self.users_list(msg_obj)
-        elif msg_type == 'get_file':
-            self.files_list(msg_obj)
-        elif msg_type == 'message_request':
-            self.msg_sent(msg_obj)
-        elif msg_type == 'download':
-            self.downloaded(msg_obj)
 
     def connected_response(self, message: Message, client_id):
         """
@@ -130,8 +97,6 @@ class Server:
         :param message: a message object that contain all the information about the request
         :return: true message if login successfully, else return false message
         """
-        # debug
-        print("login try")
 
         # create a response message to be send to the client
         res_msg = Message()
@@ -142,7 +107,6 @@ class Server:
         if client_name in self.clients.keys():
             flag = False
         # set the name of the client as the key to its socket
-        print(self.clients)
         data = self.clients[client_id]
         del self.clients[client_id]
         self.clients['' + client_name] = data
@@ -172,8 +136,6 @@ class Server:
         the request.
         :return: true message if login successfully, else return false message
         """
-        # debug
-        print("logout try")
 
         # create a message to be sent to the client
         res_msg = Message()
@@ -186,7 +148,6 @@ class Server:
         else:
             res_msg.set_message(False)
         # send the message to the client
-        print("sending a logout message reply")
         self.send_response(res_msg)
         del self.clients[message.get_sender()]
 
@@ -233,12 +194,17 @@ class Server:
         if message_dest == 'all':
             # send broadcast
             # loop over the server's clients and send the message for each one of them
-            print("sending")
             for client in self.clients.keys():
                 sent_flag = self.msg_received(message, client)
         else:
             # send the message to the specific client
             sent_flag = self.msg_received(message, message_dest)
+
+        # send a spam message to make the connection stable
+        spam = Message()
+        spam.set_receiver(message.get_sender())
+        spam.set_message("spam")
+        self.send_response(spam)
 
         # edit the message base on the data
         res_msg.set_message(sent_flag)
@@ -265,10 +231,16 @@ class Server:
         for name in self.clients.keys():
             users_list.append(name)
 
+        # send a spam message to make the connection stable
+        spam = Message()
+        spam.set_receiver(message.get_sender())
+        spam.set_message("spam")
+        self.send_response(spam)
+
         # edit the response message base on the data
         res_msg.set_message(users_list)
         res_msg.set_sender("server:127.0.0.1")
-        res_msg.set_receiver(str(message.get_sender()).split(',')[0])
+        res_msg.set_receiver(message.get_sender())
         res_msg.set_response('user_list')
 
         # send the message to the client
@@ -283,6 +255,12 @@ class Server:
 
         # create a response message to be send to the client
         res_msg = Message()
+
+        # send a spam message to make the connection stable
+        spam = Message()
+        spam.set_receiver(message.get_sender())
+        spam.set_message("spam")
+        self.send_response(spam)
 
         # edit the response message base on the data
         res_msg.set_message(self.file_list)

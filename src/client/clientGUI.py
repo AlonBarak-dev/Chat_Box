@@ -159,6 +159,9 @@ class ClientGUI:
         self.download_button.place(relx=0.18, rely=0.84)
         self.download_button["state"] = DISABLED
 
+        self.update_button = Button(self.Window, text = "Update screen", command=lambda: self.check_msg())
+        self.update_button.place(relx= 0.7, rely= 0.90)
+
         self.client = None
         self.Window.mainloop()
 
@@ -174,7 +177,7 @@ class ClientGUI:
             self.logout_button.place(relx=0.5, rely=0.005)
             self.logout_button["state"] = NORMAL
             self.display_chat.insert(END, "Welcome, " + self.client.client_name + "\n")
-            self.display_chat.bind('<Return>', self.check_msg)
+            #   self.display_chat.bind('<Return>', self.check_msg)
 
     def check_msg(self, event=None):
 
@@ -195,7 +198,13 @@ class ClientGUI:
         self.logout_button.place(relx=0.0, rely=0.005)
 
     def show_online(self):
-        print("show online")
+        users_list = self.client.get_users_list()
+        i = len(users_list) - 1
+        self.display_chat.insert(END, "-----USERS-----\n")
+        while i >= 0:
+            self.display_chat.insert(END, users_list[i] + ", ")
+            i -= 1
+        self.display_chat.insert(END, "-----USERS-----\n")
 
     def show_server_files(self):
         print("show server files")
@@ -212,11 +221,6 @@ class ClientGUI:
             flag = self.client.public_msg(message)
         else:
             flag = self.client.private_msg(message=message, dest= user_name)
-        self.check_msg()
-
-
-
-
 
     def download(self):
         print("send")
