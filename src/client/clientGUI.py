@@ -161,6 +161,7 @@ class ClientGUI:
 
         self.client = None
         self.Window.mainloop()
+        # self.msg_thread = None
 
     def login(self):
         self.client = Client()
@@ -174,6 +175,13 @@ class ClientGUI:
             self.logout_button.place(relx=0.5, rely=0.005)
             self.logout_button["state"] = NORMAL
             self.display_chat.insert(END, "Welcome, " + self.client.client_name + "\n")
+
+    # def msg_listener(self):
+    #     while True:
+    #         input_from_users = self.client.listen_msg()
+    #         if input_from_users:
+    #             self.display_chat.insert(END, input_from_users + "\n")
+
 
     def logout(self):
         self.client.logout()
@@ -193,7 +201,23 @@ class ClientGUI:
         print("show server files")
 
     def send(self):
-        print("send")
+
+        # get the user name from the GUI in case the client wants to send a privet message.
+        # will be None if he wants Broadcast message
+        user_name = self.recipient_input.get()
+        message = self.message_input.get()
+        flag = True
+        if user_name == "":
+            # broadcast message it is
+            flag = self.client.public_msg(message)
+        else:
+            flag = self.client.private_msg(message=message, dest= user_name)
+
+        if flag:
+            self.display_chat.insert(END, self.client.client_name + ": " + message)
+
+
+
 
     def download(self):
         print("send")

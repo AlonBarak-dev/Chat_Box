@@ -1,5 +1,7 @@
 import os
 import socket
+import threading
+
 from src.utils.message import Message
 
 
@@ -19,9 +21,13 @@ class Client:
 
         # false if doesnt connected to a server, True if does
         self.connected = False
+        self.listener = False
+        self.msg_listen = threading.Thread(target=self.listen_msg)
+
 
     def send_msg(self, message: Message):
 
+        print(message.to_string())
         msg_bytes = message.to_string().encode()  # felt cute, might delete later
         self.server_socket.send(msg_bytes)
 
@@ -36,8 +42,26 @@ class Client:
             msg = msg.decode()
             res_msg = Message()
             res_msg.load(msg)
+            print(res_msg.to_string())
+            if res_msg.get_response() == 'message_received':
+                self.msg_received(res_msg.get_sender(), res_msg)
+                continue
             print("return answer" + str(res_msg.get_message()))
             return res_msg
+
+    def listen_msg(self):
+        """
+        this method listen only to broadcast/private messages and inform the client in case there are new messages
+        """
+        while self.listener:
+            # receive the response packet from the server
+            msg = self.server_socket.recv(65536)
+            msg = msg.decode()
+            res_msg = Message()
+            res_msg.load(msg)
+            if res_msg.get_response() == 'message_received':
+                print("received message")
+                print(self.msg_received(res_msg.get_sender(), res_msg))
 
     def login(self, name: str, address: str):
         """
@@ -61,6 +85,8 @@ class Client:
         # listen to the server response
         login_response = self.listen()
         self.connected = True
+        self.listener = True
+        self.msg_listen.start()
         return login_response.get_message()
 
     def logout(self):
@@ -76,7 +102,9 @@ class Client:
         # send the message to the server
         self.send_msg(msg)
         # listen to the response from the server
+        self.listener = False
         response_msg = self.listen()
+        self.listener = True
         response_msg = response_msg.get_message()
         # if the logout process was successful then disconnect from the server and return true
         # else, return False
@@ -117,14 +145,16 @@ class Client:
         # create a message that request the server to send a private message to a specific user
         msg = Message()
         msg.set_request('message_request')
-        msg.set_sender(self.client_name + "," + self.client_address)
-        msg.set_receiver(dest)
+        msg.set_sender(self.client_name)
+        msg.set_receiver(dest)  # assuming its a name of a client
         msg.set_message(message)
 
         # send the message to the server
         self.send_msg(msg)
         # listen to the server response
+        self.listener = False
         response_msg = self.listen()
+        self.listener = True
         # return true if sent, false if not
         response_msg = response_msg.get_message()
         return response_msg
@@ -140,17 +170,30 @@ class Client:
         # create a message that request the server to send a message to all users connected
         msg = Message()
         msg.set_request('message_request')
-        msg.set_sender(self.client_name + "," + self.client_address)
+        msg.set_sender(self.client_name)
         msg.set_receiver('all')
         msg.set_message(message)
 
         # send the packet to the server
         self.send_msg(msg)
         # listen to server response
+        self.listener = False
         response_msg = self.listen()
+        self.listener = True
         # return true if sent, false if not
         response_msg = response_msg.get_message()
         return response_msg
+
+    def msg_received(self, src: str, message: Message):
+        """
+        this method is responsible to inform the client he has a new message from another user
+        :param message: the message that the client received
+        :param src: the source of the message
+        :return:
+        """
+        return src + ": " + message.get_message()
+
+
 
     def get_files_list(self):
         """

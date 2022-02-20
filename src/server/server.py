@@ -32,6 +32,7 @@ class Server:
         responsible for sending the message to the desired client
         :param msg: a message object that contains all the information og the packet
         """
+        print(msg.to_string())
         # get the client info
         dest_client = msg.get_receiver()
         # convert the message object to a string
@@ -153,7 +154,6 @@ class Server:
 
         # send the response message to the client
         self.send_response(res_msg)
-        print("success")
 
         # if flag:
         #     # send a welcome message
@@ -204,11 +204,10 @@ class Server:
 
         # create a message that will be delivered to the chosen client
         res_msg = Message()
-        res_msg.set_response('message_response')
+        res_msg.set_response('message_received')
         res_msg.set_message(message.get_message())
         res_msg.set_sender("server:127.0.0.1")
         res_msg.set_receiver(user_name)
-
         # send the message to the client
         self.send_response(res_msg)
 
@@ -234,6 +233,7 @@ class Server:
         if message_dest == 'all':
             # send broadcast
             # loop over the server's clients and send the message for each one of them
+            print("sending")
             for client in self.clients.keys():
                 sent_flag = self.msg_received(message, client)
         else:
@@ -241,10 +241,10 @@ class Server:
             sent_flag = self.msg_received(message, message_dest)
 
         # edit the message base on the data
-        res_msg.set_message(res_msg)
+        res_msg.set_message(sent_flag)
         res_msg.set_response('message_response')
         res_msg.set_sender("server:127.0.0.1")
-        res_msg.set_receiver(str(message.get_sender()).split(',')[0])
+        res_msg.set_receiver(message.get_sender())
         # send the response message back to the sender
         self.send_response(res_msg)
 

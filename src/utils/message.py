@@ -24,7 +24,7 @@ class Message:
                                   'message_request', 'download')
 
         self.response_types = enum('connect_response', 'disconnect_response', 'user_list', 'file_list',
-                                   'message_response', 'download_response')
+                                   'message_response', 'message_received', 'download_response')
 
         self.info = {
             "message": None,  # content of the actual message
