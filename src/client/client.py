@@ -111,7 +111,6 @@ class Client:
 
         login_response = self.msg_dict['connect_response'].pop()
 
-
         self.connected = True
         return login_response.get_message()
 
@@ -223,8 +222,6 @@ class Client:
         """
         return src + ": " + message.get_message()
 
-
-
     def get_files_list(self):
         """
         this method allows the user to ask for a list of all the files
@@ -236,7 +233,7 @@ class Client:
         # create a message that request a list of all files located in the server
         msg = Message()
         msg.set_request('get_file')
-        msg.set_sender(self.client_name + "," + self.client_address)
+        msg.set_sender(self.client_name)
 
         # send the packet to the server
         self.send_msg(msg)

@@ -12,7 +12,7 @@ class Server:
         # {"client_name": client_sock}
         self.clients = {}
         # list of all files located in the server
-        self.file_list = []
+        self.file_list = ['book.txt', 'data.txt']
 
         # Create a datagram socket
         self.receive_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
@@ -24,7 +24,6 @@ class Server:
 
         self.receive_socket.listen(15)
         self.new_client_id = 1
-
 
     def send_response(self, msg: Message):
         """
@@ -208,9 +207,6 @@ class Server:
         res_msg.set_receiver(message.get_sender())
         # send the response message back to the sender
         self.send_response(res_msg)
-
-
-
 
     def users_list(self, message: Message):
         """

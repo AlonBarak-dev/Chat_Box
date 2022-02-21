@@ -206,7 +206,13 @@ class ClientGUI:
         self.display_chat.insert(END, "\n-----USERS-----\n")
 
     def show_server_files(self):
-        print("show server files")
+        files_list = self.client.get_files_list()
+        i = len(files_list) - 1
+        self.display_chat.insert(END, "\n-----USERS-----\n")
+        while i >= 0:
+            self.display_chat.insert(END, files_list[i] + ", ")
+            i -= 1
+        self.display_chat.insert(END, "\n-----USERS-----\n")
 
     def send(self):
 
