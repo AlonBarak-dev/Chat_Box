@@ -189,16 +189,6 @@ class Server:
         # create a message to be sent once the server finish the process
         res_msg = Message()
         sent_flag = True
-        # check if the message is private or broadcast
-        message_dest = message.get_receiver()
-        if message_dest == 'all':
-            # send broadcast
-            # loop over the server's clients and send the message for each one of them
-            for client in self.clients.keys():
-                sent_flag = self.msg_received(message, client)
-        else:
-            # send the message to the specific client
-            sent_flag = self.msg_received(message, message_dest)
 
         # send a spam message to make the connection stable
         spam = Message()
@@ -213,6 +203,20 @@ class Server:
         res_msg.set_receiver(message.get_sender())
         # send the response message back to the sender
         self.send_response(res_msg)
+
+        # check if the message is private or broadcast
+        message_dest = message.get_receiver()
+        if message_dest == 'all':
+            # send broadcast
+            # loop over the server's clients and send the message for each one of them
+            for client in self.clients.keys():
+                sent_flag = self.msg_received(message, client)
+        else:
+            # send the message to the specific client
+            sent_flag = self.msg_received(message, message_dest)
+
+
+
 
     def users_list(self, message: Message):
         """

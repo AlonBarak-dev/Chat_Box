@@ -200,11 +200,11 @@ class ClientGUI:
     def show_online(self):
         users_list = self.client.get_users_list()
         i = len(users_list) - 1
-        self.display_chat.insert(END, "-----USERS-----\n")
+        self.display_chat.insert(END, "\n-----USERS-----\n")
         while i >= 0:
             self.display_chat.insert(END, users_list[i] + ", ")
             i -= 1
-        self.display_chat.insert(END, "-----USERS-----\n")
+        self.display_chat.insert(END, "\n-----USERS-----\n")
 
     def show_server_files(self):
         print("show server files")

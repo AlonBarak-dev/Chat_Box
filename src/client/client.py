@@ -45,9 +45,7 @@ class Client:
             print("Main: " + res_msg.to_string() + "\n")
             if res_msg.get_response() == 'message_received':
                 self.msg_list.append(self.msg_received(res_msg.get_sender(), res_msg))
-                continue
-            if res_msg.get_message() == "spam":
-                continue
+                return Message()
 
             return res_msg
 
@@ -131,6 +129,8 @@ class Client:
         # listen to the response from the server
         self.listener = False
         response_msg = self.listen()
+        while response_msg.get_response() != 'user_list':
+            response_msg = self.listen()
         self.listener = True
         # extract the message content from the packet
         response_msg = response_msg.get_message()
@@ -153,12 +153,14 @@ class Client:
         msg.set_sender(self.client_name)
         msg.set_receiver(dest)  # assuming its a name of a client
         msg.set_message(message)
-
+        self.listener = False
         # send the message to the server
         self.send_msg(msg)
         # listen to the server response
-        self.listener = False
         response_msg = self.listen()
+        while response_msg.get_response() != 'message_response':
+            response_msg = self.listen()
+
         self.listener = True
         # return true if sent, false if not
         response_msg = response_msg.get_message()
@@ -179,15 +181,18 @@ class Client:
         msg.set_receiver('all')
         msg.set_message(message)
 
+        self.listener = False
         # send the packet to the server
         self.send_msg(msg)
         # listen to server response
-        self.listener = False
         response_msg = self.listen()
+        while response_msg.get_response() != 'message_response':
+            response_msg = self.listen()
         self.listener = True
         # return true if sent, false if not
         response_msg = response_msg.get_message()
         return response_msg
+        # return True
 
     def msg_received(self, src: str, message: Message):
         """
