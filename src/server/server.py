@@ -190,20 +190,6 @@ class Server:
         res_msg = Message()
         sent_flag = True
 
-        # send a spam message to make the connection stable
-        spam = Message()
-        spam.set_receiver(message.get_sender())
-        spam.set_message("spam")
-        self.send_response(spam)
-
-        # edit the message base on the data
-        res_msg.set_message(sent_flag)
-        res_msg.set_response('message_response')
-        res_msg.set_sender("server:127.0.0.1")
-        res_msg.set_receiver(message.get_sender())
-        # send the response message back to the sender
-        self.send_response(res_msg)
-
         # check if the message is private or broadcast
         message_dest = message.get_receiver()
         if message_dest == 'all':
@@ -214,6 +200,14 @@ class Server:
         else:
             # send the message to the specific client
             sent_flag = self.msg_received(message, message_dest)
+
+        # edit the message base on the data
+        res_msg.set_message(sent_flag)
+        res_msg.set_response('message_response')
+        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_receiver(message.get_sender())
+        # send the response message back to the sender
+        self.send_response(res_msg)
 
 
 
@@ -235,12 +229,6 @@ class Server:
         for name in self.clients.keys():
             users_list.append(name)
 
-        # send a spam message to make the connection stable
-        spam = Message()
-        spam.set_receiver(message.get_sender())
-        spam.set_message("spam")
-        self.send_response(spam)
-
         # edit the response message base on the data
         res_msg.set_message(users_list)
         res_msg.set_sender("server:127.0.0.1")
@@ -260,16 +248,10 @@ class Server:
         # create a response message to be send to the client
         res_msg = Message()
 
-        # send a spam message to make the connection stable
-        spam = Message()
-        spam.set_receiver(message.get_sender())
-        spam.set_message("spam")
-        self.send_response(spam)
-
         # edit the response message base on the data
         res_msg.set_message(self.file_list)
         res_msg.set_response('file_list')
-        res_msg.set_receiver(str(message.get_sender()).split(',')[0])
+        res_msg.set_receiver(message.get_sender())
         res_msg.set_sender("server:127.0.0.1")
 
         # send the response message to the client

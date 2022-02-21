@@ -23,7 +23,15 @@ class Client:
         self.connected = False
         self.listener = False
         self.msg_listen = threading.Thread(target=self.listen_msg)
-        self.msg_list = []
+        self.msg_dict = {
+            'connect_response': [],
+            'disconnect_response': [],
+            'user_list': [],
+            'file_list': [],
+            'message_response': [],
+            'message_received': [],
+            'download_response': []
+        }
 
 
     def send_msg(self, message: Message):
@@ -31,10 +39,27 @@ class Client:
         msg_bytes = message.to_string().encode()  # felt cute, might delete later
         self.server_socket.send(msg_bytes)
 
-    def listen(self) -> Message:
+    # def listen(self) -> Message:
+    #     """
+    #     this method listens to the server and translate the server's response into Message Objects
+    #     :return: Message object
+    #     """
+    #     while True:
+    #         # receive the response packet from the server
+    #         msg = self.server_socket.recv(65536)
+    #         msg = msg.decode()
+    #         res_msg = Message()
+    #         res_msg.load(msg)
+    #         print("Main: " + res_msg.to_string() + "\n")
+    #         if res_msg.get_response() == 'message_received':
+    #             self.msg_dict['message_received'].append(self.msg_received(res_msg.get_sender(), res_msg))
+    #             return Message()
+    #
+    #         return res_msg
+
+    def listen_msg(self):
         """
-        this method listens to the server and translate the server's response into Message Objects
-        :return: Message object
+        this method listen only to broadcast/private messages and inform the client in case there are new messages
         """
         while True:
             # receive the response packet from the server
@@ -42,33 +67,29 @@ class Client:
             msg = msg.decode()
             res_msg = Message()
             res_msg.load(msg)
-            print("Main: " + res_msg.to_string() + "\n")
-            if res_msg.get_response() == 'message_received':
-                self.msg_list.append(self.msg_received(res_msg.get_sender(), res_msg))
-                return Message()
-
-            return res_msg
-
-    def listen_msg(self):
-        """
-        this method listen only to broadcast/private messages and inform the client in case there are new messages
-        """
-        while self.listener:
-            # receive the response packet from the server
-            msg = self.server_socket.recv(65536)
-            msg = msg.decode()
-            res_msg = Message()
-            res_msg.load(msg)
             print("Message: " + res_msg.to_string() + "\n")
-            if res_msg.get_response() == 'message_received':
+            if res_msg.get_response() == 'connect_response':
+                self.msg_dict['connect_response'].append(res_msg)
+            elif res_msg.get_response() == 'disconnect_response':
+                self.msg_dict['disconnect_response'].append(res_msg)
+            elif res_msg.get_response() == 'user_list':
+                self.msg_dict['user_list'].append(res_msg)
+            elif res_msg.get_response() == 'file_list':
+                self.msg_dict['file_list'].append(res_msg)
+            elif res_msg.get_response() == 'message_response':
+                self.msg_dict['message_response'].append(res_msg)
+            elif res_msg.get_response() == 'message_received':
                 message = self.msg_received(res_msg.get_sender(), res_msg)
-                self.msg_list.append(message)
+                self.msg_dict['message_received'].append(message)
+            elif res_msg.get_response() == 'download_response':
+                self.msg_dict['download_response'].append(res_msg)
 
     def login(self, name: str, address: str):
         """
         this method responsible for the login process.
         return: true if connected, false otherwise
         """
+
         # initialize both client's name and address
         self.client_name = name
         self.client_address = address
@@ -79,15 +100,19 @@ class Client:
 
         # connect to the server
         self.server_socket.connect(self.server_address_port)
+        self.msg_listen.start()
 
         # send the message to the server
         self.send_msg(msg)
 
         # listen to the server response
-        login_response = self.listen()
+        while len(self.msg_dict['connect_response']) == 0:
+            continue
+
+        login_response = self.msg_dict['connect_response'].pop()
+
+
         self.connected = True
-        self.listener = True
-        self.msg_listen.start()
         return login_response.get_message()
 
     def logout(self):
@@ -103,9 +128,11 @@ class Client:
         # send the message to the server
         self.send_msg(msg)
         # listen to the response from the server
-        self.listener = False
-        response_msg = self.listen()
-        self.listener = True
+
+        while len(self.msg_dict['disconnect_response']) == 0:
+            continue
+        response_msg = self.msg_dict['disconnect_response'].pop()
+
         response_msg = response_msg.get_message()
         # if the logout process was successful then disconnect from the server and return true
         # else, return False
@@ -127,11 +154,9 @@ class Client:
         # send the message to the server
         self.send_msg(msg)
         # listen to the response from the server
-        self.listener = False
-        response_msg = self.listen()
-        while response_msg.get_response() != 'user_list':
-            response_msg = self.listen()
-        self.listener = True
+        while len(self.msg_dict['user_list']) == 0:
+            continue
+        response_msg = self.msg_dict['user_list'].pop()
         # extract the message content from the packet
         response_msg = response_msg.get_message()
         # "<name1><name2><name3>....<nameN>" is the input for extract_list function
@@ -153,15 +178,12 @@ class Client:
         msg.set_sender(self.client_name)
         msg.set_receiver(dest)  # assuming its a name of a client
         msg.set_message(message)
-        self.listener = False
         # send the message to the server
         self.send_msg(msg)
         # listen to the server response
-        response_msg = self.listen()
-        while response_msg.get_response() != 'message_response':
-            response_msg = self.listen()
-
-        self.listener = True
+        while len(self.msg_dict['message_response']) == 0:
+            continue
+        response_msg = self.msg_dict['message_response'].pop()
         # return true if sent, false if not
         response_msg = response_msg.get_message()
         return response_msg
@@ -181,14 +203,12 @@ class Client:
         msg.set_receiver('all')
         msg.set_message(message)
 
-        self.listener = False
         # send the packet to the server
         self.send_msg(msg)
         # listen to server response
-        response_msg = self.listen()
-        while response_msg.get_response() != 'message_response':
-            response_msg = self.listen()
-        self.listener = True
+        while len(self.msg_dict['message_response']) == 0:
+            continue
+        response_msg = self.msg_dict['message_response'].pop()
         # return true if sent, false if not
         response_msg = response_msg.get_message()
         return response_msg
@@ -221,7 +241,9 @@ class Client:
         # send the packet to the server
         self.send_msg(msg)
         # listen to the response from the server
-        response_msg = self.listen()
+        while len(self.msg_dict['file_list']) == 0:
+            continue
+        response_msg = self.msg_dict['file_list'].pop()
 
         # extract the list from the message
         response_msg = response_msg.get_message()
@@ -238,13 +260,15 @@ class Client:
         # create a message that request to download a file from the server
         msg = Message()
         msg.set_request('download')
-        msg.set_sender(self.client_name + "," + self.client_address)
+        msg.set_sender(self.client_name)
         msg.set_message(file_name)
 
         # send the message to the server
         self.send_msg(msg)
         # listen to the server response
-        response_msg: Message = self.listen()
+        while len(self.msg_dict['download_response']) == 0:
+            continue
+        response_msg = self.msg_dict['download_response'].pop()
 
         # in case the file doesn't exist, return false
         if response_msg.get_message() == "ERR":
