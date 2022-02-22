@@ -98,7 +98,9 @@ class Server:
             elif msg_type == 'message_request':
                 self.msg_sent(msg_obj)
             elif msg_type == 'download':
-                self.downloaded(msg_obj, address)
+                # start another thread for download communication so other platforms will still work at the same time
+                thread = threading.Thread(target=self.downloaded, args=(msg_obj, address[0],))
+                thread.start()
 
     def listen2(self):
         """

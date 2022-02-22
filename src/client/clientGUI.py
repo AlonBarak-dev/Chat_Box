@@ -151,7 +151,7 @@ class ClientGUI:
 
         # download button
         self.download_button = Button(self.Window, text="Download",
-                                      command=lambda: self.download())
+                                      command=lambda: self.download_thread())
 
         self.download_button.place(relx=0.18, rely=0.84)
         self.download_button["state"] = DISABLED
@@ -177,8 +177,7 @@ class ClientGUI:
             self.logout_button["state"] = NORMAL
             self.display_chat.insert(END, "Welcome, " + self.client.client_name + "\n")
 
-
-    def check_msg(self, event=None):
+    def check_msg(self):
 
         print(len(self.client.msg_dict['message_received']))
         while len(self.client.msg_dict['message_received']) != 0:
@@ -225,10 +224,20 @@ class ClientGUI:
             flag = self.client.public_msg(message)
         else:
             flag = self.client.private_msg(message=message, dest=user_name)
-            self.display_chat.insert(END, self.client.client_name + ": private : " + user_name + " : " + message + "\n")
+            if flag:
+                self.display_chat.insert(END, self.client.client_name + ": private : " + user_name + " : " + message
+                                         + "\n")
+        if not flag:
+            self.display_chat.insert(END, self.client.client_name +
+                                     ": message failed to reach its target.. try again\n")
 
-    def download(self):
+    def download_thread(self):
         file_name = self.server_file_name_input.get()
         new_file_name = self.save_as_input.get()
+        thread = threading.Thread(target=self.download, args=(file_name, new_file_name,))
+        thread.start()
+
+    def download(self, file_name: str, new_file_name: str):
+        self.display_chat.insert(END, "\n Got a download connection\n")
         self.client.download(file_name, new_file_name)
         self.display_chat.insert(END, "\n file: " + file_name + " was downloaded successfully!\n")
