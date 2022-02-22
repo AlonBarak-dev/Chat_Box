@@ -39,24 +39,6 @@ class Client:
         msg_bytes = message.to_string().encode()  # felt cute, might delete later
         self.server_socket.send(msg_bytes)
 
-    # def listen(self) -> Message:
-    #     """
-    #     this method listens to the server and translate the server's response into Message Objects
-    #     :return: Message object
-    #     """
-    #     while True:
-    #         # receive the response packet from the server
-    #         msg = self.server_socket.recv(65536)
-    #         msg = msg.decode()
-    #         res_msg = Message()
-    #         res_msg.load(msg)
-    #         print("Main: " + res_msg.to_string() + "\n")
-    #         if res_msg.get_response() == 'message_received':
-    #             self.msg_dict['message_received'].append(self.msg_received(res_msg.get_sender(), res_msg))
-    #             return Message()
-    #
-    #         return res_msg
-
     def listen_msg(self):
         """
         this method listen only to broadcast/private messages and inform the client in case there are new messages
@@ -247,7 +229,7 @@ class Client:
         files_list = self.extract_list(response_msg)
         return files_list
 
-    def download(self, file_name: str):
+    def download(self, file_name: str, save_as: str):
         """
         this method allows the user to download a file from the file list.
         :param file_name:
@@ -272,7 +254,7 @@ class Client:
             return False
         else:
             # create a file name
-            write_name = 'Server_' + file_name
+            write_name = save_as
             # if the file already located at the client, delete it and re-download
             if os.path.exists(write_name):
                 os.remove(write_name)
@@ -280,7 +262,7 @@ class Client:
             # create the file
             with open(write_name, 'wb') as file:
                 # write the data in the new file
-                data = response_msg.get_message()
+                data = str(response_msg.get_message()).encode()
                 file.write(data)
         return True
 

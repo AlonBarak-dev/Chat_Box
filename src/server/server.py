@@ -268,7 +268,6 @@ class Server:
 
         # create a response message to be send to the client
         res_msg = Message()
-
         # if the file doesnt exist in the server return an error message
         if not os.path.exists(str(message.get_message())):
             res_msg.set_message("ERR")
@@ -281,7 +280,7 @@ class Server:
         # edit the message base on the data
         res_msg.set_response('download_response')
         res_msg.set_sender("server:127.0.0.1")
-        res_msg.set_receiver(str(message.get_sender()).split(',')[0])
+        res_msg.set_receiver(message.get_sender())
 
         # send the message to the client
         self.send_response(res_msg)

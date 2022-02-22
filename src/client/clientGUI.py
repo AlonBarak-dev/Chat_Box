@@ -228,4 +228,6 @@ class ClientGUI:
             flag = self.client.private_msg(message=message, dest= user_name)
 
     def download(self):
-        print("send")
+        file_name = self.server_file_name_input.get()
+        new_file_name = self.save_as_input.get()
+        self.client.download(file_name, new_file_name)
