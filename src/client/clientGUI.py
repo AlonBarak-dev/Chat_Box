@@ -226,8 +226,10 @@ class ClientGUI:
             flag = self.client.public_msg(message)
         else:
             flag = self.client.private_msg(message=message, dest=user_name)
+            self.display_chat.insert(END, self.client.client_name + ": private : " + user_name+ " : " + message)
 
     def download(self):
         file_name = self.server_file_name_input.get()
         new_file_name = self.save_as_input.get()
         self.client.download(file_name, new_file_name)
+        self.display_chat.insert(END, "\n file: " + file_name + " was downloaded successfully!\n")

@@ -1,6 +1,7 @@
 import os
 import socket
 import threading
+import time
 
 from src.utils.message import Message
 
@@ -287,8 +288,8 @@ class Server:
             return
         else:
             # DONT FORGET TO RELEASE PORTS WHEN DONE
-            server_port = self.ports[0]
-            client_port = self.ports[1]
+            server_port = int(self.ports[0])
+            client_port = int(self.ports[1])
             del self.ports[0]
             del self.ports[1]
             self.port_dict[message.get_sender()] = (server_port, client_port)
@@ -306,12 +307,12 @@ class Server:
         send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # bind with the server
-        recv_sock.bind(("127.0.0.1", client_port))
+        recv_sock.bind(("127.0.0.1", server_port))
 
         file = open(message.get_message(), 'rb')
 
         seq = -1
-        buffer_size = 1024
+        buffer_size = 100
         offset = 0
 
         msg = Message()
@@ -322,32 +323,40 @@ class Server:
             seq += 1
             if offset + buffer_size > len(data):
                 # in case it is the last packet needed
-                content = data[offset:]
+                content = data[offset:].decode()
             else:
-                content = data[offset:offset+buffer_size]
+                content = data[offset:offset+buffer_size].decode()
 
             offset += buffer_size
             # edit the response base on the situation
             msg.set_seq(seq)
             msg.set_message(content)
-
+            print(msg.to_string())
             # send the packet to the client
             msg_bytes = msg.to_string().encode()
+            time.sleep(1)
             send_sock.sendto(msg_bytes, ("127.0.0.1", client_port))
 
             # wait for an ACK and convert the response to a message object
-            ack_msg = recv_sock.recv(1024)
+            ack_msg = recv_sock.recv(4096)
             ack_msg = ack_msg.decode()
             ack_msg_obj = Message()
             ack_msg_obj.load(ack_msg)
-
+            print(ack_msg_obj.to_string())
             # handle seq issues
             if ack_msg_obj.get_seq() != seq:
                 # if the message received is the wrong SEQ
-                seq = ack_msg_obj.get_seq()
+                seq = int(ack_msg_obj.get_seq())
                 offset = buffer_size * seq
                 continue
 
         msg.set_message("DONE")
+        seq += 1
         msg.set_seq(seq)
         send_sock.sendto(msg.to_string().encode(), ("127.0.0.1", client_port))
+
+        self.ports.append(server_port)
+        self.ports.append(client_port)
+
+        send_sock.close()
+        recv_sock.close()

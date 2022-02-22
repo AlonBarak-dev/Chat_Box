@@ -1,6 +1,7 @@
 import os
 import socket
 import threading
+import time
 
 from src.utils.message import Message
 
@@ -258,28 +259,31 @@ class Client:
         server_port, client_port = str(response_msg.get_message()).split(",")
         send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        server_port = int(server_port)
+        client_port = int(client_port)
         # bind with the server
-        recv_sock.bind(("127.0.0.1", server_port))
+        recv_sock.bind(("127.0.0.1", client_port))
 
         expected_seq = 0
 
-        file = open(save_as, 'ab')
+        file = open(save_as, 'a')
 
         while True:
             # listen to the server and convert packets into message objects
-            msg_bytes = recv_sock.recv(1024)
+            print("listening...")
+            msg_bytes = recv_sock.recv(4096)
             msg_obj = Message()
             msg_obj.load(msg_bytes.decode())
             content = msg_obj.get_message()
-            seq = msg_obj.get_seq()
-
+            seq = int(msg_obj.get_seq())
+            print(msg_obj.to_string())
             if seq == expected_seq:
                 # when the transmission is finished, break the loop
                 if content == "DONE":
                     break
                 # write the content into the file
+                print("content: " + content)
                 file.write(content)
-                expected_seq += 1
             else:
                 seq = expected_seq
 
@@ -288,9 +292,13 @@ class Client:
             msg_res.set_seq(seq)
             msg_res.set_message("ACK")
             # send the message to the server
+            time.sleep(1)
             send_sock.sendto(msg_res.to_string().encode(), ("127.0.0.1", server_port))
+            expected_seq += 1
 
         print("SUCCESS")
+        recv_sock.close()
+        send_sock.close()
 
     def extract_list(self, message: str) -> list:
         """

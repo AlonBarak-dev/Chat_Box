@@ -11,7 +11,7 @@ class Message:
             "recipient": "r:",
             "request": "t:",
             "response": "p:",
-            "sequence": "q"
+            "sequence": "q:"
         }
         self.prefix_to_key = {
             "m:": "message",
@@ -19,7 +19,7 @@ class Message:
             "r:": "recipient",
             "t:": "request",
             "p:": "response",
-            "q": "sequence"
+            "q:": "sequence"
         }
 
         self.request_types = enum('connect', 'disconnect', 'get_user_list', 'get_file',
@@ -33,7 +33,8 @@ class Message:
             "sender": None,  # the name of the sender
             "recipient": None,  # the name of the recipient / "all" for broadcast
             "request": None,  # connect/disconnect/get_user_list/get_file/port_request
-            "response": None
+            "response": None,  # response type
+            "sequence": None  # sequence number
         }
 
         if message is not None:
@@ -79,7 +80,7 @@ class Message:
         return False
 
     def set_seq(self, seq):
-        self.info['seq'] = seq
+        self.info['sequence'] = seq
         return True
 
     def get_sender(self):
@@ -98,4 +99,4 @@ class Message:
         return self.info["response"]
 
     def get_seq(self):
-        return self.info['seq']
+        return self.info['sequence']
