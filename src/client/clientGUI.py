@@ -1,9 +1,6 @@
 import threading
-import tkinter.tix
 from tkinter import *
-from src.server.server import Server
-from src.client.client import Client
-import string
+from client import Client
 
 
 class ClientGUI:
@@ -159,14 +156,16 @@ class ClientGUI:
         self.download_button.place(relx=0.18, rely=0.84)
         self.download_button["state"] = DISABLED
 
-        self.update_button = Button(self.Window, text = "Update screen", command=lambda: self.check_msg())
+        self.update_button = Button(self.Window, text="Update screen", command=lambda: self.check_msg())
         self.update_button.place(relx= 0.7, rely= 0.90)
 
         self.client = None
+        self.msg_thread = threading.Thread(target=self.check_msg)
         self.Window.mainloop()
 
     def login(self):
         self.client = Client()
+        self.msg_thread.start()
 
         if self.client.login(self.name_input.get(), self.address_input.get()):
             self.show_online_button["state"] = NORMAL
@@ -177,7 +176,7 @@ class ClientGUI:
             self.logout_button.place(relx=0.5, rely=0.005)
             self.logout_button["state"] = NORMAL
             self.display_chat.insert(END, "Welcome, " + self.client.client_name + "\n")
-            #   self.display_chat.bind('<Return>', self.check_msg)
+
 
     def check_msg(self, event=None):
 
@@ -188,7 +187,7 @@ class ClientGUI:
     def logout(self):
         self.client.logout()
         self.login_button["state"] = NORMAL
-        self.display_chat.insert(END, "Good Bye, " + self.client.client_name + "\n")
+        self.display_chat.insert(END, "\nGood Bye, " + self.client.client_name + "\n")
         self.logout_button["state"] = DISABLED
         self.show_online_button["state"] = DISABLED
         self.download_button["state"] = DISABLED
@@ -226,7 +225,7 @@ class ClientGUI:
             flag = self.client.public_msg(message)
         else:
             flag = self.client.private_msg(message=message, dest=user_name)
-            self.display_chat.insert(END, self.client.client_name + ": private : " + user_name+ " : " + message)
+            self.display_chat.insert(END, self.client.client_name + ": private : " + user_name + " : " + message + "\n")
 
     def download(self):
         file_name = self.server_file_name_input.get()

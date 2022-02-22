@@ -1,7 +1,5 @@
 import threading
-from threading import Thread
-
-from src.client.clientGUI import ClientGUI
+from clientGUI import ClientGUI
 
 
 def run_client():

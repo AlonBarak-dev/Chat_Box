@@ -1,9 +1,8 @@
-import os
 import socket
 import threading
 import time
 
-from src.utils.message import Message
+from message import Message
 
 
 class Client:
@@ -20,7 +19,9 @@ class Client:
         self.server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         # the socket for file transfer
         self.server_download_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.server_address_port = ('127.0.0.1', self.server_port)
+        # default values
+        self.server_address = '127.0.0.1'
+        self.server_address_port = (self.server_address, self.server_port)
 
         # false if doesnt connected to a server, True if does
         self.connected = False
@@ -77,7 +78,8 @@ class Client:
 
         # initialize both client's name and address
         self.client_name = name
-        self.client_address = address
+        self.server_address_port = (address, self.server_port)
+        self.server_address = address
         # create a packet to send to the server
         msg = Message()
         msg.set_request('connect')
@@ -262,7 +264,7 @@ class Client:
         server_port = int(server_port)
         client_port = int(client_port)
         # bind with the server
-        recv_sock.bind(("127.0.0.1", client_port))
+        recv_sock.bind((self.server_address, client_port))
         recv_sock.settimeout(0.5)
 
         expected_seq = 0
@@ -282,7 +284,7 @@ class Client:
                 msg_res.set_seq(expected_seq - 1)
                 msg_res.set_message("ACK")
                 # send the message to the server
-                send_sock.sendto(msg_res.to_string().encode(), ("127.0.0.1", server_port))
+                send_sock.sendto(msg_res.to_string().encode(), (self.server_address, server_port))
                 continue
 
             msg_obj = Message()
@@ -306,9 +308,8 @@ class Client:
             msg_res.set_seq(seq)
             msg_res.set_message("ACK")
             # send the message to the server
-            # time.sleep(1)
-            time.sleep(1)
-            send_sock.sendto(msg_res.to_string().encode(), ("127.0.0.1", server_port))
+            time.sleep(0.8)
+            send_sock.sendto(msg_res.to_string().encode(), (self.server_address, server_port))
 
         print("SUCCESS")
         recv_sock.close()

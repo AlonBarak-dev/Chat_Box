@@ -1,16 +1,14 @@
-import functools
-import multiprocessing
 import os
 import socket
 import threading
 import time
 
-from src.utils.message import Message
+from message import Message
 
 
 class Server:
 
-    def __init__(self):
+    def __init__(self, address=None):
         # a dict to hold all of the connected clients
         # {"client_name": client_sock}
         self.clients = {}
@@ -32,7 +30,14 @@ class Server:
         # bind the receive socket
         self.server_port = 50000
         self.server_udp_port = 50001
-        self.ip = "127.0.0.1"
+        # initialize the IP address of the server
+        if address is None:
+            # localhost as default
+            self.ip = "127.0.0.1"
+        else:
+            # custom address
+            self.ip = address
+
         self.receive_socket.bind((self.ip, self.server_port))
         self.receive_socket_udp.bind((self.ip, self.server_udp_port))
 
@@ -53,6 +58,8 @@ class Server:
         print(msg.to_string())
         # get the client info
         dest_client = msg.get_receiver()
+        if dest_client == "Server":
+            return
         # convert the message object to a string
         msg_bytes = msg.to_string().encode()
         # send the message to the desired client
@@ -91,7 +98,7 @@ class Server:
             elif msg_type == 'message_request':
                 self.msg_sent(msg_obj)
             elif msg_type == 'download':
-                self.downloaded(msg_obj)
+                self.downloaded(msg_obj, address)
 
     def listen2(self):
         """
@@ -103,6 +110,7 @@ class Server:
 
             # temporary key for the socket
             self.clients[str(self.new_client_id)] = sock
+
             # create a new thread for the new client and start it
             client_thread = threading.Thread(target=self.run_client, args=(sock, address, str(self.new_client_id),))
             self.new_client_id += 1
@@ -130,20 +138,19 @@ class Server:
         self.clients['' + client_name] = data
         # edit the response message
         res_msg.set_response('connect_response')
-        res_msg.set_sender('server:127.0.0.1')
+        res_msg.set_sender('server:' + self.ip)
         res_msg.set_receiver(client_name)
         res_msg.set_message(flag)
 
         # send the response message to the client
         self.send_response(res_msg)
 
-        # if flag:
-        #     # send a welcome message
-        #     broadcast_msg = Message()
-        #     broadcast_msg.set_message("New user has joined! Welcome " + client_name)
-        #     broadcast_msg.set_receiver('all')
-        #     broadcast_msg.set_sender('server')
-        #     self.msg_sent(broadcast_msg)
+        # send a broadcast message that a new client has joined the chat group
+        brd_msg = Message()
+        brd_msg.set_receiver("all")
+        brd_msg.set_message("New User joined out Chat Box! Say hello to " + client_name + " :)")
+        brd_msg.set_sender("Server")
+        self.msg_sent(brd_msg)
 
     def disconnected(self, message: Message):
         """
@@ -159,7 +166,7 @@ class Server:
         res_msg = Message()
         res_msg.set_response('disconnect_response')
         res_msg.set_receiver(message.get_sender())
-        res_msg.set_sender("sender:127.0.0.1")
+        res_msg.set_sender('server:' + self.ip)
         # delete the client if exist
         if message.get_sender() in self.clients:
             res_msg.set_message(True)
@@ -222,7 +229,7 @@ class Server:
         # edit the message base on the data
         res_msg.set_message(sent_flag)
         res_msg.set_response('message_response')
-        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_sender('server:' + self.ip)
         res_msg.set_receiver(message.get_sender())
         # send the response message back to the sender
         self.send_response(res_msg)
@@ -246,7 +253,7 @@ class Server:
 
         # edit the response message base on the data
         res_msg.set_message(users_list)
-        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_sender('server:' + self.ip)
         res_msg.set_receiver(message.get_sender())
         res_msg.set_response('user_list')
 
@@ -267,12 +274,12 @@ class Server:
         res_msg.set_message(self.file_list)
         res_msg.set_response('file_list')
         res_msg.set_receiver(message.get_sender())
-        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_sender('server:' + self.ip)
 
         # send the response message to the client
         self.send_response(res_msg)
 
-    def downloaded(self, message: Message):
+    def downloaded(self, message: Message, client_address: str):
         """
         this method transfer a stream of bytes that represent a file in the server to the client.
         :param message: a message object tha contains all the info about the client request
@@ -298,7 +305,7 @@ class Server:
 
         # edit the message base on the data
         res_msg.set_response('download_response')
-        res_msg.set_sender("server:127.0.0.1")
+        res_msg.set_sender('server:' + self.ip)
         res_msg.set_receiver(message.get_sender())
 
         # send the message to the client
@@ -308,7 +315,7 @@ class Server:
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock.settimeout(0.5)
         # bind with the server
-        recv_sock.bind(("127.0.0.1", server_port))
+        recv_sock.bind((self.ip, server_port))
 
         file = open(message.get_message(), 'rb')
 
@@ -336,7 +343,7 @@ class Server:
             # send the packet to the client
             msg_bytes = msg.to_string().encode()
             time.sleep(1)
-            send_sock.sendto(msg_bytes, ("127.0.0.1", client_port))
+            send_sock.sendto(msg_bytes, (client_address, client_port))
 
             # wait for an ACK and convert the response to a message object
             try:
@@ -360,7 +367,7 @@ class Server:
         msg.set_message("DONE")
         seq += 1
         msg.set_seq(seq)
-        send_sock.sendto(msg.to_string().encode(), ("127.0.0.1", client_port))
+        send_sock.sendto(msg.to_string().encode(), (client_address, client_port))
         print(msg.to_string())
 
         self.ports.append(server_port)
