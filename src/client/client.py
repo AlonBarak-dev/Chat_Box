@@ -271,15 +271,19 @@ class Client:
             msg_obj = Message()
             msg_obj.load(msg_bytes.decode())
             content = msg_obj.get_message()
+            seq = msg_obj.get_seq()
 
-            # when the transmission is finished, break the loop
-            if content == "DONE":
-                break
-            # write the content into the file
-            file.write(content)
+            if seq == expected_seq:
+                # when the transmission is finished, break the loop
+                if content == "DONE":
+                    break
+                # write the content into the file
+                file.write(content)
+                expected_seq += 1
+            else:
+                seq = expected_seq
 
             # send an ack back to the server
-            seq = msg_obj.get_seq()
             msg_res = Message()
             msg_res.set_seq(seq)
             msg_res.set_message("ACK")

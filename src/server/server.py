@@ -349,4 +349,5 @@ class Server:
                 continue
 
         msg.set_message("DONE")
+        msg.set_seq(seq)
         send_sock.sendto(msg.to_string().encode(), ("127.0.0.1", client_port))
