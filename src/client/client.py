@@ -261,16 +261,32 @@ class Client:
         # bind with the server
         recv_sock.bind(("127.0.0.1", server_port))
 
+        expected_seq = 0
 
+        file = open(save_as, 'ab')
 
+        while True:
+            # listen to the server and convert packets into message objects
+            msg_bytes = recv_sock.recv(1024)
+            msg_obj = Message()
+            msg_obj.load(msg_bytes.decode())
+            content = msg_obj.get_message()
 
+            # when the transmission is finished, break the loop
+            if content == "DONE":
+                break
+            # write the content into the file
+            file.write(content)
 
+            # send an ack back to the server
+            seq = msg_obj.get_seq()
+            msg_res = Message()
+            msg_res.set_seq(seq)
+            msg_res.set_message("ACK")
+            # send the message to the server
+            send_sock.sendto(msg_res.to_string().encode(), ("127.0.0.1", server_port))
 
-
-
-
-
-
+        print("SUCCESS")
 
     def extract_list(self, message: str) -> list:
         """

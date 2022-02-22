@@ -330,8 +330,7 @@ class Server:
             # edit the response base on the situation
             msg.set_seq(seq)
             msg.set_message(content)
-            msg.set_receiver(message.get_sender())
-            msg.set_sender("server:127.0.0.1")
+
             # send the packet to the client
             msg_bytes = msg.to_string().encode()
             send_sock.sendto(msg_bytes, ("127.0.0.1", client_port))
@@ -348,3 +347,6 @@ class Server:
                 seq = ack_msg_obj.get_seq()
                 offset = buffer_size * seq
                 continue
+
+        msg.set_message("DONE")
+        send_sock.sendto(msg.to_string().encode(), ("127.0.0.1", client_port))
