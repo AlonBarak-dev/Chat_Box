@@ -1,3 +1,5 @@
+import functools
+import multiprocessing
 import os
 import socket
 import threading
@@ -15,9 +17,7 @@ class Server:
 
         # list of all files located in the server
         self.file_list = os.listdir()
-        print(self.file_list)
         for file in self.file_list:
-            print(file)
             if 'py' in file:
                 self.file_list.remove(file)
 
@@ -306,6 +306,7 @@ class Server:
 
         send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        recv_sock.settimeout(0.5)
         # bind with the server
         recv_sock.bind(("127.0.0.1", server_port))
 
@@ -338,7 +339,13 @@ class Server:
             send_sock.sendto(msg_bytes, ("127.0.0.1", client_port))
 
             # wait for an ACK and convert the response to a message object
-            ack_msg = recv_sock.recv(4096)
+            try:
+                ack_msg = recv_sock.recv(4096)
+            except socket.timeout:
+                offset = buffer_size * seq
+                seq -= 1
+                continue
+
             ack_msg = ack_msg.decode()
             ack_msg_obj = Message()
             ack_msg_obj.load(ack_msg)
@@ -354,6 +361,7 @@ class Server:
         seq += 1
         msg.set_seq(seq)
         send_sock.sendto(msg.to_string().encode(), ("127.0.0.1", client_port))
+        print(msg.to_string())
 
         self.ports.append(server_port)
         self.ports.append(client_port)

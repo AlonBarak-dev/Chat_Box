@@ -282,8 +282,8 @@ class Client:
                 if content == "DONE":
                     break
                 # write the content into the file
-                print("content: " + content)
                 file.write(content)
+                expected_seq += 1
             else:
                 seq = expected_seq
 
@@ -294,7 +294,7 @@ class Client:
             # send the message to the server
             time.sleep(1)
             send_sock.sendto(msg_res.to_string().encode(), ("127.0.0.1", server_port))
-            expected_seq += 1
+
 
         print("SUCCESS")
         recv_sock.close()
