@@ -9,15 +9,17 @@ class Message:
             "message": "m:",
             "sender": "s:",
             "recipient": "r:",
-            "request": "q:",
-            "response": "p:"
+            "request": "t:",
+            "response": "p:",
+            "sequence": "q"
         }
         self.prefix_to_key = {
             "m:": "message",
             "s:": "sender",
             "r:": "recipient",
-            "q:": "request",
-            "p:": "response"
+            "t:": "request",
+            "p:": "response",
+            "q": "sequence"
         }
 
         self.request_types = enum('connect', 'disconnect', 'get_user_list', 'get_file',
@@ -76,6 +78,10 @@ class Message:
             return True
         return False
 
+    def set_seq(self, seq):
+        self.info['seq'] = seq
+        return True
+
     def get_sender(self):
         return self.info["sender"]
 
@@ -90,3 +96,6 @@ class Message:
 
     def get_response(self):
         return self.info["response"]
+
+    def get_seq(self):
+        return self.info['seq']

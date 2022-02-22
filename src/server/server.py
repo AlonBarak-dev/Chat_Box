@@ -307,4 +307,44 @@ class Server:
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # bind with the server
         recv_sock.bind(("127.0.0.1", client_port))
-        
+
+        file = open(message.get_message(), 'rb')
+
+        seq = -1
+        buffer_size = 1024
+        offset = 0
+
+        msg = Message()
+
+        data = file.read()
+        # run over the entire file
+        while offset < len(data):
+            seq += 1
+            if offset + buffer_size > len(data):
+                # in case it is the last packet needed
+                content = data[offset:]
+            else:
+                content = data[offset:offset+buffer_size]
+
+            offset += buffer_size
+            # edit the response base on the situation
+            msg.set_seq(seq)
+            msg.set_message(content)
+            msg.set_receiver(message.get_sender())
+            msg.set_sender("server:127.0.0.1")
+            # send the packet to the client
+            msg_bytes = msg.to_string().encode()
+            send_sock.sendto(msg_bytes, ("127.0.0.1", client_port))
+
+            # wait for an ACK and convert the response to a message object
+            ack_msg = recv_sock.recv(1024)
+            ack_msg = ack_msg.decode()
+            ack_msg_obj = Message()
+            ack_msg_obj.load(ack_msg)
+
+            # handle seq issues
+            if ack_msg_obj.get_seq() != seq:
+                # if the message received is the wrong SEQ
+                seq = ack_msg_obj.get_seq()
+                offset = buffer_size * seq
+                continue
