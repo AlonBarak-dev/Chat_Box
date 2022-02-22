@@ -263,6 +263,7 @@ class Client:
         client_port = int(client_port)
         # bind with the server
         recv_sock.bind(("127.0.0.1", client_port))
+        recv_sock.settimeout(0.5)
 
         expected_seq = 0
 
@@ -270,13 +271,26 @@ class Client:
 
         while True:
             # listen to the server and convert packets into message objects
-            print("listening...")
-            msg_bytes = recv_sock.recv(4096)
+
+            try:
+                msg_bytes = recv_sock.recv(4096)
+            except socket.timeout:
+                if expected_seq == 0:
+                    continue
+                # send an ack back to the server
+                msg_res = Message()
+                msg_res.set_seq(expected_seq - 1)
+                msg_res.set_message("ACK")
+                # send the message to the server
+                send_sock.sendto(msg_res.to_string().encode(), ("127.0.0.1", server_port))
+                continue
+
             msg_obj = Message()
             msg_obj.load(msg_bytes.decode())
             content = msg_obj.get_message()
             seq = int(msg_obj.get_seq())
             print(msg_obj.to_string())
+            print(str(seq) + " vs except " + str(expected_seq))
             if seq == expected_seq:
                 # when the transmission is finished, break the loop
                 if content == "DONE":
@@ -292,9 +306,9 @@ class Client:
             msg_res.set_seq(seq)
             msg_res.set_message("ACK")
             # send the message to the server
+            # time.sleep(1)
             time.sleep(1)
             send_sock.sendto(msg_res.to_string().encode(), ("127.0.0.1", server_port))
-
 
         print("SUCCESS")
         recv_sock.close()
