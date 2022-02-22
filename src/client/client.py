@@ -291,6 +291,9 @@ class Client:
         :param message: "<name1><name2><name3>....<nameN>" is the input for extract_list function
         :return: a list of strings -> ["name1","name2",....,"nameN"]
         """
-        users_list = []
         users_list = message[1:-2].split("><")
+        for file in users_list:
+            print(file)
+            if (file == "'__init__.py'") or (file == "'serverGUI.py'"):
+                users_list.remove(file)
         return users_list

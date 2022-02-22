@@ -12,7 +12,12 @@ class Server:
         # {"client_name": client_sock}
         self.clients = {}
         # list of all files located in the server
-        self.file_list = ['book.txt', 'data.txt']
+        self.file_list = os.listdir()
+        print(self.file_list)
+        for file in self.file_list:
+            print(file)
+            if 'py' in file:
+                self.file_list.remove(file)
 
         # Create a datagram socket
         self.receive_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)

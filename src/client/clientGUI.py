@@ -208,11 +208,11 @@ class ClientGUI:
     def show_server_files(self):
         files_list = self.client.get_files_list()
         i = len(files_list) - 1
-        self.display_chat.insert(END, "\n-----USERS-----\n")
+        self.display_chat.insert(END, "\n-----FILES-----\n")
         while i >= 0:
             self.display_chat.insert(END, files_list[i] + ", ")
             i -= 1
-        self.display_chat.insert(END, "\n-----USERS-----\n")
+        self.display_chat.insert(END, "\n-----FILES-----\n")
 
     def send(self):
 
