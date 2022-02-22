@@ -17,6 +17,8 @@ class Client:
 
         # the socket for receiving messages from the server
         self.server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
+        # the socket for file transfer
+        self.server_download_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.server_address_port = ('127.0.0.1', self.server_port)
 
         # false if doesnt connected to a server, True if does
@@ -249,22 +251,50 @@ class Client:
             continue
         response_msg = self.msg_dict['download_response'].pop()
 
-        # in case the file doesn't exist, return false
-        if response_msg.get_message() == "ERR":
-            return False
-        else:
-            # create a file name
+        if response_msg.get_message is True:
+            # open UDP connection for the download
+            self.server_download_socket.connect(("127.0.0.1", 50001))
+            while len(self.msg_dict['download_response']) == 0:
+                continue
             write_name = save_as
-            # if the file already located at the client, delete it and re-download
+            # if already exist, update
             if os.path.exists(write_name):
                 os.remove(write_name)
 
             # create the file
-            with open(write_name, 'wb') as file:
-                # write the data in the new file
-                data = str(response_msg.get_message()).encode()
-                file.write(data)
-        return True
+            file = open(write_name, 'ab')
+
+            # initializing Sequence for receiving
+            expecting_seq = 0
+
+            while True:
+                # Start Receiving
+                message, address = self.server_download_socket.recv(4096)
+                message = message.decode()
+
+                if message == "DONE":
+                    break
+
+                # Extract Seq and Content from received message
+                seq = message[0]
+                content = message[1:]
+
+                # Send Acknowledgment to Client
+                ack_message = 'Ack' + seq
+                self.server_download_socket.send(ack_message.encode())
+
+                if seq == str(expecting_seq):
+                    # Print the Content and
+                    file.write(content)
+                    expecting_seq = 1 - expecting_seq
+                else:
+                    negative_seq = str(1 - expecting_seq)
+                    ack_message = 'Ack' + negative_seq
+                    self.server_download_socket.send(ack_message.encode())
+            self.server_download_socket.close()
+            file.close()
+            print("worked")
+
 
     def extract_list(self, message: str) -> list:
         """

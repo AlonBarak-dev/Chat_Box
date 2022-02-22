@@ -11,6 +11,7 @@ class Server:
         # a dict to hold all of the connected clients
         # {"client_name": client_sock}
         self.clients = {}
+
         # list of all files located in the server
         self.file_list = os.listdir()
         print(self.file_list)
@@ -19,15 +20,23 @@ class Server:
             if 'py' in file:
                 self.file_list.remove(file)
 
-        # Create a datagram socket
+        # Create a STREAM socket
         self.receive_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
         self.receive_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        # create a DGRAM socket
+        self.receive_socket_udp = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        self.receive_socket_udp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
         # bind the receive socket
         self.server_port = 50000
+        self.server_udp_port = 50001
         self.ip = "127.0.0.1"
         self.receive_socket.bind((self.ip, self.server_port))
+        self.receive_socket_udp.bind((self.ip, self.server_udp_port))
 
         self.receive_socket.listen(15)
+
         self.new_client_id = 1
 
     def send_response(self, msg: Message):
@@ -272,11 +281,6 @@ class Server:
         if not os.path.exists(str(message.get_message())):
             res_msg.set_message("ERR")
 
-        # if the file exist
-        if message.get_message() != '':
-            file = open(message.get_message(), 'rb')
-            res_msg.set_message(file.read())
-
         # edit the message base on the data
         res_msg.set_response('download_response')
         res_msg.set_sender("server:127.0.0.1")
@@ -284,3 +288,42 @@ class Server:
 
         # send the message to the client
         self.send_response(res_msg)
+
+        if res_msg.get_message() == "ERR":
+            return
+
+        sock = self.receive_socket_udp
+
+        SEGMENT_SIZE = 100
+        offset = 0
+        seq = 0
+
+        with open(str(message.get_message())) as f:
+            content = f.read()
+
+        while offset < len(content):
+            if offset + SEGMENT_SIZE > len(content):
+                segment = content[offset:]
+            else:
+                segment = content[offset:offset + SEGMENT_SIZE]
+            offset += SEGMENT_SIZE
+
+            ack_received = False
+            while not ack_received:
+                message = str(seq) + segment
+                sock.send(message.encode())
+                try:
+                    message, address = sock.recv(4096)
+                    message = message.decode()
+                except socket.timeout:
+                    print("Timeout")
+                else:
+                    print(message)
+                    ack_seq = message[3]
+                    if ack_seq == str(seq):  # assuming max number of ACKs is 10
+                        ack_received = True
+            seq = 1 - seq
+
+        sock.send("DONE".encode())
+        sock.close()
+        f.close()

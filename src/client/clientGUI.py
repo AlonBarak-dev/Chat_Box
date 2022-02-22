@@ -225,7 +225,7 @@ class ClientGUI:
             # broadcast message it is
             flag = self.client.public_msg(message)
         else:
-            flag = self.client.private_msg(message=message, dest= user_name)
+            flag = self.client.private_msg(message=message, dest=user_name)
 
     def download(self):
         file_name = self.server_file_name_input.get()
