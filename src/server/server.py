@@ -57,6 +57,7 @@ class Server:
         """
         print(msg.to_string())
         # get the client info
+        time.sleep(0.1)
         dest_client = msg.get_receiver()
         if dest_client == "Server":
             return
@@ -291,10 +292,11 @@ class Server:
 
         # create a response message to be send to the client
         res_msg = Message()
+        flag_return = False
         # if the file doesnt exist in the server return an error message
         if not os.path.exists(str(message.get_message())):
             res_msg.set_message("ERR")
-            return
+            flag_return = True
         else:
             # DONT FORGET TO RELEASE PORTS WHEN DONE
             server_port = int(self.ports[0])
@@ -304,6 +306,9 @@ class Server:
             self.port_dict[message.get_sender()] = (server_port, client_port)
             # set the message content as the chosen ports
             res_msg.set_message(str(server_port) + "," + str(client_port))
+
+        if flag_return:
+            return
 
         # edit the message base on the data
         res_msg.set_response('download_response')

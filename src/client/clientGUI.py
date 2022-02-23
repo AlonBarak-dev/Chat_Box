@@ -243,8 +243,10 @@ class ClientGUI:
 
     def download(self, file_name: str, new_file_name: str):
         self.display_chat.insert(END, "\n Got a download connection\n")
-        self.client.download(file_name, new_file_name)
-        self.display_chat.insert(END, "\n file: " + file_name + " was downloaded successfully!\n")
+        if self.client.download(file_name, new_file_name):
+            self.display_chat.insert(END, "\n file: " + file_name + " was downloaded successfully!\n")
+        else:
+            self.display_chat.insert(END, "\n file: " + file_name + " doesn't exist!\n")
 
     def proceed_thread(self):
         thread = threading.Thread(target=self.proceed)

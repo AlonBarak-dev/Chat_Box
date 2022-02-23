@@ -255,9 +255,9 @@ class Client:
             continue
         response_msg = self.msg_dict['download_response'].pop()
 
-        if response_msg.get_message == "ERR":
+        if response_msg.get_message() == "ERR":
             # file not exist
-            return 
+            return False
         
         server_port, client_port = str(response_msg.get_message()).split(",")
         send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -329,6 +329,7 @@ class Client:
         print("SUCCESS")
         recv_sock.close()
         send_sock.close()
+        return True
 
     def extract_list(self, message: str) -> list:
         """
