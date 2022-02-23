@@ -15,15 +15,15 @@ class serverGUI:
         self.go.place(relx=0.45,
                       rely=0.2)
         host_name = socket.gethostname()
-        host_add = socket.gethostbyname(host_name)
-        self.lable = Label(self.Window, text="Server IP Address : " + host_add)
+        self.host_add = socket.gethostbyname(host_name)
+        self.lable = Label(self.Window, text="Server IP Address : " + self.host_add)
         self.lable.place(relx=0.10,
                          rely= 0.5)
 
         self.Window.mainloop()
 
     def start(self):
-        server = Server()
+        server = Server(self.host_add)
         server_thread = threading.Thread(target=server.listen2)
         server_thread.start()
         print("server is ready..")
