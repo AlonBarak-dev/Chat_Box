@@ -348,7 +348,9 @@ class Server:
                             stop = False
                     except socket.timeout:
                         flag = True
-
+            if break_flag:
+                break
+            
             seq += 1
             if offset + buffer_size > len(data):
                 # in case it is the last packet needed
