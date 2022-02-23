@@ -329,6 +329,7 @@ class Server:
         stop = True
         data = file.read()
         break_flag = False
+
         # run over the entire file
         while offset < len(data):
 
@@ -350,7 +351,6 @@ class Server:
                         flag = True
             if break_flag:
                 break
-            
             seq += 1
             if offset + buffer_size > len(data):
                 # in case it is the last packet needed
@@ -367,7 +367,6 @@ class Server:
             msg_bytes = msg.to_string().encode()
             time.sleep(1)
             send_sock.sendto(msg_bytes, (client_address, client_port))
-
             # wait for an ACK and convert the response to a message object
             try:
                 ack_msg = recv_sock.recv(4096)
@@ -377,7 +376,6 @@ class Server:
                 continue
 
             ack_msg = ack_msg.decode()
-            print(ack_msg)
             ack_msg_obj = Message()
             ack_msg_obj.load(ack_msg)
             print(ack_msg_obj.to_string())
