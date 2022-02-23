@@ -161,15 +161,13 @@ class ClientGUI:
         self.proceed_button["state"] = DISABLED
 
         self.update_button = Button(self.Window, text="Update screen", command=lambda: self.check_msg())
-        self.update_button.place(relx= 0.7, rely= 0.90)
+        self.update_button.place(relx=0.7, rely=0.90)
 
         self.client = None
-        self.msg_thread = threading.Thread(target=self.check_msg)
         self.Window.mainloop()
 
     def login(self):
         self.client = Client()
-        self.msg_thread.start()
 
         if self.client.login(self.name_input.get(), self.address_input.get()):
             self.show_online_button["state"] = NORMAL
