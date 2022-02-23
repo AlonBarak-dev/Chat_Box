@@ -34,7 +34,8 @@ class Client:
             'file_list': [],
             'message_response': [],
             'message_received': [],
-            'download_response': []
+            'download_response': [],
+            'proceed_messages': []
         }
 
 
@@ -265,7 +266,8 @@ class Client:
         client_port = int(client_port)
         # bind with the server
         recv_sock.bind((self.server_address, client_port))
-        recv_sock.settimeout(0.5)
+        # RTT
+        recv_sock.settimeout(1.5)
 
         expected_seq = 0
 
@@ -285,6 +287,13 @@ class Client:
                 msg_res.set_message("ACK")
                 # send the message to the server
                 send_sock.sendto(msg_res.to_string().encode(), (self.server_address, server_port))
+                continue
+
+            if msg_bytes.decode() == "PROCEED":
+                self.msg_dict['proceed_messages'].append(msg_bytes.decode())
+                while len(self.msg_dict['proceed_messages']) != 0:
+                    continue
+                send_sock.sendto("Y".encode(), (self.server_address, server_port))
                 continue
 
             msg_obj = Message()

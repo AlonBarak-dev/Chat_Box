@@ -156,6 +156,10 @@ class ClientGUI:
         self.download_button.place(relx=0.18, rely=0.84)
         self.download_button["state"] = DISABLED
 
+        self.proceed_button = Button(self.Window, text="Proceed", command=lambda: self.proceed_thread())
+        self.proceed_button.place(relx=0.30, rely= 0.84)
+        self.proceed_button["state"] = DISABLED
+
         self.update_button = Button(self.Window, text="Update screen", command=lambda: self.check_msg())
         self.update_button.place(relx= 0.7, rely= 0.90)
 
@@ -178,7 +182,6 @@ class ClientGUI:
             self.display_chat.insert(END, "Welcome, " + self.client.client_name + "\n")
 
     def check_msg(self):
-
         print(len(self.client.msg_dict['message_received']))
         while len(self.client.msg_dict['message_received']) != 0:
             self.display_chat.insert(END, self.client.msg_dict['message_received'].pop() + "\n")
@@ -234,10 +237,27 @@ class ClientGUI:
     def download_thread(self):
         file_name = self.server_file_name_input.get()
         new_file_name = self.save_as_input.get()
+        self.proceed_button["state"] = NORMAL
         thread = threading.Thread(target=self.download, args=(file_name, new_file_name,))
         thread.start()
+        thread2 = threading.Thread(target=self.check_process, args=(file_name,))
+        thread2.start()
 
     def download(self, file_name: str, new_file_name: str):
         self.display_chat.insert(END, "\n Got a download connection\n")
         self.client.download(file_name, new_file_name)
         self.display_chat.insert(END, "\n file: " + file_name + " was downloaded successfully!\n")
+
+    def proceed_thread(self):
+        thread = threading.Thread(target=self.proceed)
+        thread.start()
+
+    def proceed(self):
+        self.client.msg_dict["proceed_messages"].pop()
+        self.proceed_button["state"] = DISABLED
+
+    def check_process(self, file_name: str):
+        while len(self.client.msg_dict["proceed_messages"]) == 0:
+            continue
+        self.display_chat.insert(END, "\n file: " + file_name + " was downloaded partly, please press Proceed"
+                                                                "to resume the download process\n")

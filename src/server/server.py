@@ -315,7 +315,7 @@ class Server:
 
         send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        recv_sock.settimeout(0.5)
+        recv_sock.settimeout(1.5)
         # bind with the server
         recv_sock.bind((self.ip, server_port))
 
@@ -326,10 +326,29 @@ class Server:
         offset = 0
 
         msg = Message()
-
+        stop = True
         data = file.read()
+        break_flag = False
         # run over the entire file
         while offset < len(data):
+
+            # trying to stop the process so the client can confirm
+            if (offset > len(data)/4) and (offset < len(data)/2) and stop:
+                send_sock.sendto("PROCEED".encode(), (client_address, client_port))
+                flag = True
+                while flag:
+                    try:
+                        prcd_msg = recv_sock.recv(4096)
+                        if prcd_msg.decode() != "Y":
+                            # stop the download
+                            break_flag = True
+                            break
+                        else:
+                            flag = False
+                            stop = False
+                    except socket.timeout:
+                        flag = True
+
             seq += 1
             if offset + buffer_size > len(data):
                 # in case it is the last packet needed
@@ -356,6 +375,7 @@ class Server:
                 continue
 
             ack_msg = ack_msg.decode()
+            print(ack_msg)
             ack_msg_obj = Message()
             ack_msg_obj.load(ack_msg)
             print(ack_msg_obj.to_string())
