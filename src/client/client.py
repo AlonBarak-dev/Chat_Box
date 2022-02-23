@@ -272,7 +272,8 @@ class Client:
         expected_seq = 0
 
         file = open(save_as, 'a')
-
+        stopped = False
+        last_byte = 0
         while True:
             # listen to the server and convert packets into message objects
 
@@ -289,8 +290,12 @@ class Client:
                 send_sock.sendto(msg_res.to_string().encode(), (self.server_address, server_port))
                 continue
 
+            if not stopped:
+                last_byte = msg_bytes[-1]
+
             if msg_bytes.decode() == "PROCEED":
-                self.msg_dict['proceed_messages'].append(msg_bytes.decode())
+                stopped = True
+                self.msg_dict['proceed_messages'].append(last_byte)
                 while len(self.msg_dict['proceed_messages']) != 0:
                     continue
                 send_sock.sendto("Y".encode(), (self.server_address, server_port))
@@ -299,6 +304,7 @@ class Client:
             msg_obj = Message()
             msg_obj.load(msg_bytes.decode())
             content = msg_obj.get_message()
+
             seq = int(msg_obj.get_seq())
             print(msg_obj.to_string())
             print(str(seq) + " vs except " + str(expected_seq))

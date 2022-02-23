@@ -260,4 +260,6 @@ class ClientGUI:
         while len(self.client.msg_dict["proceed_messages"]) == 0:
             continue
         self.display_chat.insert(END, "\n file: " + file_name + " was downloaded partly, please press Proceed"
-                                                                "to resume the download process\n")
+                                                                "to resume the download process\n"
+                                                                "Last Byte is: " +
+                                 str(self.client.msg_dict["proceed_messages"][0]) + "\n")
