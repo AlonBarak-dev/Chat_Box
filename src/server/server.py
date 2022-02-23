@@ -307,9 +307,6 @@ class Server:
             # set the message content as the chosen ports
             res_msg.set_message(str(server_port) + "," + str(client_port))
 
-        if flag_return:
-            return
-
         # edit the message base on the data
         res_msg.set_response('download_response')
         res_msg.set_sender('server:' + self.ip)
@@ -317,6 +314,9 @@ class Server:
 
         # send the message to the client
         self.send_response(res_msg)
+
+        if flag_return:
+            return
 
         send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
