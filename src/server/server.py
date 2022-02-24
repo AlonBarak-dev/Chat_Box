@@ -321,9 +321,9 @@ class Server:
             window_size = int(seq / 4) + 1
             # generate ports numbers
             server_port = int(self.ports[0])
-            client_port = int(self.ports[1])
+            # client_port = int(self.ports[1])
             del self.ports[0]
-            del self.ports[1]
+            # del self.ports[1]
             self.port_dict[message.get_sender()] = (server_port, client_port)
             # set the message content as the chosen ports
             # "server_port,client_port,number_of_packet,window_size"
@@ -341,18 +341,19 @@ class Server:
             return
 
         # establish a UDP connection with the client
-        send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # bind with the receive socket
-        recv_sock.bind((self.ip, server_port))
+        sock.bind((self.ip, server_port))
         print("server port : " + str(server_port) + " client port : " + str(client_port))
-
+        message, client_address = sock.recvfrom(1024)
         number_of_packets_needed = seq
         latest_packet_sent = 0
         self.base = 0
         # listen to ACKs from the client
-        recv_sock.settimeout(3)
-        _thread.start_new_thread(self.receive_udp, (recv_sock,))
+        sock.settimeout(3)
+        _thread.start_new_thread(self.receive_udp, (sock,))
 
         seq = -1
         msg = Message()
@@ -366,7 +367,7 @@ class Server:
                 # trying to stop the process so the client can confirm
                 if (latest_packet_sent > number_of_packets_needed/4) and (latest_packet_sent < number_of_packets_needed/2) \
                         and stop:
-                    send_sock.sendto("PROCEED".encode(), (client_address, client_port))
+                    sock.sendto("PROCEED".encode(), client_address)
                     print("PROCEED?")
                     self.lock.release()
                     while not self.proceed:
@@ -377,7 +378,7 @@ class Server:
                 msg.set_seq(latest_packet_sent)
                 msg.set_message(packets[str(latest_packet_sent)])
                 print(msg.to_string())
-                send_sock.sendto(msg.to_string().encode(), (client_address, client_port))
+                sock.sendto(msg.to_string().encode(), client_address)
                 latest_packet_sent += 1
 
             # start the RTT timer
@@ -402,14 +403,14 @@ class Server:
         msg.set_message("DONE")
         seq += 1
         msg.set_seq(seq)
-        send_sock.sendto(msg.to_string().encode(), (client_address, client_port))
+        sock.sendto(msg.to_string().encode(), client_address)
         print(msg.to_string())
 
         self.ports.append(server_port)
         self.ports.append(client_port)
         self.stop = True
         self.proceed = False
-        send_sock.close()
+        # send_sock.close()
 
     def receive_udp(self, recv_sock: socket):
         """

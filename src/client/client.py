@@ -262,16 +262,17 @@ class Client:
 
         # establish connection with the server
         server_port, client_port, window_size = str(response_msg.get_message()).split(",")
-        send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server_port = int(server_port)
         client_port = int(client_port)
         print("server port : " + str(server_port) + " client port : " + str(client_port))
         window_size = int(window_size)
 
         # bind with the server
-        recv_sock.bind((socket.gethostbyname(socket.gethostname()), client_port))
-
+        sock.bind((socket.gethostbyname(socket.gethostname()), client_port))
+        sock.sendto("ACK".encode(), (self.server_address, server_port))
         expected_seq = 0
         # remove the file if exists
         if os.path.exists(save_as):
@@ -284,7 +285,7 @@ class Client:
         while True:
 
             # listen to the server and convert packets into message objects
-            msg_bytes = recv_sock.recv(1024)
+            msg_bytes = sock.recv(1024)
 
             if not stopped:
                 last_byte = msg_bytes[-1]
@@ -294,7 +295,7 @@ class Client:
                 self.msg_dict['proceed_messages'].append(last_byte)
                 while len(self.msg_dict['proceed_messages']) != 0:
                     continue
-                send_sock.sendto("Y".encode(), (self.server_address, server_port))
+                sock.sendto("Y".encode(), (self.server_address, server_port))
                 print("sent YES")
                 continue
 
@@ -313,7 +314,7 @@ class Client:
             if seq_number == expected_seq:
                 res_msg.set_message("ACK")
                 res_msg.set_seq(expected_seq)
-                send_sock.sendto(res_msg.to_string().encode(), (self.server_address, server_port))
+                sock.sendto(res_msg.to_string().encode(), (self.server_address, server_port))
                 expected_seq += 1
                 file.write(data)
             else:
@@ -322,11 +323,12 @@ class Client:
                     res_msg.set_seq(expected_seq)
                 else:
                     res_msg.set_seq(expected_seq - 1)
-                send_sock.sendto(res_msg.to_string().encode(), (self.server_address, server_port))
+                sock.sendto(res_msg.to_string().encode(), (self.server_address, server_port))
 
         print("SUCCESS")
-        recv_sock.close()
-        send_sock.close()
+        # recv_sock.close()
+        # send_sock.close()
+        sock.close()
         return True
 
     def extract_list(self, message: str) -> list:
