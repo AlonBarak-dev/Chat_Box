@@ -1,3 +1,4 @@
+import os
 import socket
 import threading
 import time
@@ -258,41 +259,38 @@ class Client:
         if response_msg.get_message() == "ERR":
             # file not exist
             return False
-        
-        server_port, client_port = str(response_msg.get_message()).split(",")
+
+        # establish connection with the server
+        server_port, client_port, window_size = str(response_msg.get_message()).split(",")
         send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server_port = int(server_port)
         client_port = int(client_port)
+        window_size = int(window_size)
+
         # bind with the server
         recv_sock.bind((self.server_address, client_port))
-        # RTT
-        recv_sock.settimeout(1.5)
 
         expected_seq = 0
+        # remove the file if exists
+        if os.path.exists(save_as):
+            os.remove(save_as)
 
         file = open(save_as, 'a')
         stopped = False
         last_byte = 0
-        while True:
-            # listen to the server and convert packets into message objects
 
-            try:
-                msg_bytes = recv_sock.recv(4096)
-            except socket.timeout:
-                if expected_seq == 0:
-                    continue
-                # send an ack back to the server
-                msg_res = Message()
-                msg_res.set_seq(expected_seq - 1)
-                msg_res.set_message("ACK")
-                # send the message to the server
-                send_sock.sendto(msg_res.to_string().encode(), (self.server_address, server_port))
-                continue
+        # seq number : content
+        window = {}
+
+        while True:
+
+            # listen to the server and convert packets into message objects
+            msg_bytes = recv_sock.recv(1024)
 
             if not stopped:
                 last_byte = msg_bytes[-1]
-
+            # check if received a PROCEED message from the server, wait for user reply
             if msg_bytes.decode() == "PROCEED":
                 stopped = True
                 self.msg_dict['proceed_messages'].append(last_byte)
@@ -301,30 +299,31 @@ class Client:
                 send_sock.sendto("Y".encode(), (self.server_address, server_port))
                 continue
 
-            msg_obj = Message()
-            msg_obj.load(msg_bytes.decode())
-            content = msg_obj.get_message()
+            msg = Message()
+            msg.load(msg_bytes.decode())
+            print(msg.to_string())
+            if msg.get_message() == "DONE":
+                break
 
-            seq = int(msg_obj.get_seq())
-            print(msg_obj.to_string())
-            print(str(seq) + " vs except " + str(expected_seq))
-            if seq == expected_seq:
-                # when the transmission is finished, break the loop
-                if content == "DONE":
-                    break
-                # write the content into the file
-                file.write(content)
+            # continue receiving messages
+            seq_number = int(msg.get_seq())
+            data = msg.get_message()
+
+            # send back an ACK
+            res_msg = Message()
+            if seq_number == expected_seq:
+                res_msg.set_message("ACK")
+                res_msg.set_seq(expected_seq)
+                send_sock.sendto(res_msg.to_string().encode(), (self.server_address, server_port))
                 expected_seq += 1
+                file.write(data)
             else:
-                seq = expected_seq
-
-            # send an ack back to the server
-            msg_res = Message()
-            msg_res.set_seq(seq)
-            msg_res.set_message("ACK")
-            # send the message to the server
-            time.sleep(0.8)
-            send_sock.sendto(msg_res.to_string().encode(), (self.server_address, server_port))
+                res_msg.set_message("ACK")
+                if expected_seq == 0:
+                    res_msg.set_seq(expected_seq)
+                else:
+                    res_msg.set_seq(expected_seq - 1)
+                send_sock.sendto(res_msg.to_string().encode(), (self.server_address, server_port))
 
         print("SUCCESS")
         recv_sock.close()

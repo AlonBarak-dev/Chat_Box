@@ -1,9 +1,11 @@
+import _thread
 import os
 import socket
 import threading
 import time
 
 from message import Message
+from Timer import Timer
 
 
 class Server:
@@ -31,12 +33,7 @@ class Server:
         self.server_port = 50000
         self.server_udp_port = 50001
         # initialize the IP address of the server
-        if address is None:
-            # localhost as default
-            self.ip = "127.0.0.1"
-        else:
-            # custom address
-            self.ip = address
+        self.ip = address
 
         self.receive_socket.bind((self.ip, self.server_port))
         self.receive_socket_udp.bind((self.ip, self.server_udp_port))
@@ -48,6 +45,12 @@ class Server:
         self.port_dict = {}
         # a list of available ports
         self.ports = [i for i in range(55000, 55020)]
+
+        # selective repeat
+        self.lock = _thread.allocate_lock()
+        self.base = 0
+        self.timer = Timer(0.5)
+        self.stop = True
 
     def send_response(self, msg: Message):
         """
@@ -293,19 +296,37 @@ class Server:
         # create a response message to be send to the client
         res_msg = Message()
         flag_return = False
+        self.stop = False
+        window_size = 0
+        server_port = 0
+        client_port = 0
+        packets = {}
+        seq = 0
+        file = None
         # if the file doesnt exist in the server return an error message
         if not os.path.exists(str(message.get_message())):
             res_msg.set_message("ERR")
             flag_return = True
         else:
-            # DONT FORGET TO RELEASE PORTS WHEN DONE
+            file = open(message.get_message(), 'rb')
+            # add all packets to the buffer
+            while True:
+                data = file.read(100).decode()
+                if not data:
+                    break
+                packets[str(seq)] = data
+                seq += 1
+            # define window size
+            window_size = int(seq / 4) + 1
+            # generate ports numbers
             server_port = int(self.ports[0])
             client_port = int(self.ports[1])
             del self.ports[0]
             del self.ports[1]
             self.port_dict[message.get_sender()] = (server_port, client_port)
             # set the message content as the chosen ports
-            res_msg.set_message(str(server_port) + "," + str(client_port))
+            # "server_port,client_port,number_of_packet,window_size"
+            res_msg.set_message(str(server_port) + "," + str(client_port) + "," + str(window_size))
 
         # edit the message base on the data
         res_msg.set_response('download_response')
@@ -314,82 +335,79 @@ class Server:
 
         # send the message to the client
         self.send_response(res_msg)
-
+        # if the file doesnt exist, return
         if flag_return:
             return
 
+        # establish a UDP connection with the client
         send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        recv_sock.settimeout(1.5)
-        # bind with the server
+        # bind with the receive socket
         recv_sock.bind((self.ip, server_port))
 
-        file = open(message.get_message(), 'rb')
+        number_of_packets_needed = seq
+        latest_packet_sent = 0
+        self.base = 0
+        # listen to ACKs from the client
+        recv_sock.settimeout(3)
+        _thread.start_new_thread(self.receive_udp, (recv_sock,))
 
         seq = -1
-        buffer_size = 100
-        offset = 0
-
         msg = Message()
         stop = True
-        data = file.read()
         break_flag = False
 
         # run over the entire file
-        while offset < len(data):
+        while self.base < number_of_packets_needed:
+            self.lock.acquire()
+            while latest_packet_sent < self.base + window_size:
+                # trying to stop the process so the client can confirm
+                if (latest_packet_sent > number_of_packets_needed/4) and (latest_packet_sent < number_of_packets_needed/2) \
+                        and stop:
+                    send_sock.sendto("PROCEED".encode(), (client_address, client_port))
+                    print("PROCEED?")
+                    flag = True
+                    while flag:
+                        try:
+                            prcd_msg = recv_sock.recv(1024)
+                            if prcd_msg.decode() != "Y":
+                                # stop the download
+                                break_flag = True
+                                break
+                            else:
+                                flag = False
+                                stop = False
+                        except socket.timeout:
+                            flag = True
+                # break the method if needed
+                if break_flag:
+                    break
 
-            # trying to stop the process so the client can confirm
-            if (offset > len(data)/4) and (offset < len(data)/2) and stop:
-                send_sock.sendto("PROCEED".encode(), (client_address, client_port))
-                flag = True
-                while flag:
-                    try:
-                        prcd_msg = recv_sock.recv(4096)
-                        if prcd_msg.decode() != "Y":
-                            # stop the download
-                            break_flag = True
-                            break
-                        else:
-                            flag = False
-                            stop = False
-                    except socket.timeout:
-                        flag = True
-            if break_flag:
-                break
-            seq += 1
-            if offset + buffer_size > len(data):
-                # in case it is the last packet needed
-                content = data[offset:].decode()
+                # continue sending packets
+                msg.set_seq(latest_packet_sent)
+                msg.set_message(packets[str(latest_packet_sent)])
+                print(msg.to_string())
+                send_sock.sendto(msg.to_string().encode(), (client_address, client_port))
+                latest_packet_sent += 1
+
+            # start the RTT timer
+            if not self.timer.running():
+                self.timer.start()
+
+            # wait until the end of the RTT or a ACK is received
+            while self.timer.running() and not self.timer.timeout():
+                self.lock.release()
+                time.sleep(0.05)
+                self.lock.acquire()
+
+            # check for timeout
+            if self.timer.timeout():
+                self.timer.stop()
+                latest_packet_sent = self.base
             else:
-                content = data[offset:offset+buffer_size].decode()
+                window_size = min(window_size, number_of_packets_needed - self.base)
 
-            offset += buffer_size
-            # edit the response base on the situation
-            msg.set_seq(seq)
-            msg.set_message(content)
-            print(msg.to_string())
-            # send the packet to the client
-            msg_bytes = msg.to_string().encode()
-            time.sleep(1)
-            send_sock.sendto(msg_bytes, (client_address, client_port))
-            # wait for an ACK and convert the response to a message object
-            try:
-                ack_msg = recv_sock.recv(4096)
-            except socket.timeout:
-                offset = buffer_size * seq
-                seq -= 1
-                continue
-
-            ack_msg = ack_msg.decode()
-            ack_msg_obj = Message()
-            ack_msg_obj.load(ack_msg)
-            print(ack_msg_obj.to_string())
-            # handle seq issues
-            if ack_msg_obj.get_seq() != seq:
-                # if the message received is the wrong SEQ
-                seq = int(ack_msg_obj.get_seq())
-                offset = buffer_size * seq
-                continue
+            self.lock.release()
 
         msg.set_message("DONE")
         seq += 1
@@ -399,6 +417,31 @@ class Server:
 
         self.ports.append(server_port)
         self.ports.append(client_port)
-
+        self.stop = True
         send_sock.close()
+
+    def receive_udp(self, recv_sock: socket):
+        """
+        this method receives ACKS from the client
+        :param recv_sock: a UDP socket
+        :return:
+        """
+        while True:
+            try:
+                message = recv_sock.recv(1024)
+            except socket.timeout:
+                if self.stop:
+                    break
+                else:
+                    continue
+            message = message.decode()
+            msg = Message()
+            msg.load(message)
+            print(msg.to_string())
+            ack = int(msg.get_seq())
+            if ack >= self.base:
+                self.lock.acquire()
+                self.base = ack + 1
+                self.timer.stop()
+                self.lock.release()
         recv_sock.close()
