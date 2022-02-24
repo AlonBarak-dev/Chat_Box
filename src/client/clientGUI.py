@@ -142,7 +142,7 @@ class ClientGUI:
 
         # save as input
         self.save_as_input = Entry(self.Window,
-                                   font="Helvetica 14")
+                                   font="Helvetica 12")
 
         self.save_as_input.place(relwidth=0.1,
                                  relheight=0.03,
