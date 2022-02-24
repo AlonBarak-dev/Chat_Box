@@ -345,6 +345,7 @@ class Server:
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # bind with the receive socket
         recv_sock.bind((self.ip, server_port))
+        print("server port : " + str(server_port) + " client port : " + str(client_port))
 
         number_of_packets_needed = seq
         latest_packet_sent = 0

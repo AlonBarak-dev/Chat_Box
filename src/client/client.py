@@ -266,6 +266,7 @@ class Client:
         recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server_port = int(server_port)
         client_port = int(client_port)
+        print("server port : " + str(server_port) + " client port : " + str(client_port))
         window_size = int(window_size)
 
         # bind with the server
