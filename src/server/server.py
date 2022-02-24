@@ -51,6 +51,7 @@ class Server:
         self.base = 0
         self.timer = Timer(0.5)
         self.stop = True
+        self.proceed = False
 
     def send_response(self, msg: Message):
         """
@@ -113,7 +114,7 @@ class Server:
         while True:
             # accept a connection from a client
             sock, address = self.receive_socket.accept()
-
+            print(address)
             # temporary key for the socket
             self.clients[str(self.new_client_id)] = sock
 
@@ -366,22 +367,10 @@ class Server:
                         and stop:
                     send_sock.sendto("PROCEED".encode(), (client_address, client_port))
                     print("PROCEED?")
-                    flag = True
-                    while flag:
-                        try:
-                            prcd_msg = recv_sock.recv(1024)
-                            if prcd_msg.decode() != "Y":
-                                # stop the download
-                                break_flag = True
-                                break
-                            else:
-                                flag = False
-                                stop = False
-                        except socket.timeout:
-                            flag = True
-                # break the method if needed
-                if break_flag:
-                    break
+                    self.lock.release()
+                    while not self.proceed:
+                        continue
+                    self.lock.acquire()
 
                 # continue sending packets
                 msg.set_seq(latest_packet_sent)
@@ -418,6 +407,7 @@ class Server:
         self.ports.append(server_port)
         self.ports.append(client_port)
         self.stop = True
+        self.proceed = False
         send_sock.close()
 
     def receive_udp(self, recv_sock: socket):
@@ -434,6 +424,12 @@ class Server:
                     break
                 else:
                     continue
+            if message.decode() == "Y":
+                print("YES")
+                self.lock.acquire()
+                self.proceed = True
+                self.lock.release()
+                continue
             message = message.decode()
             msg = Message()
             msg.load(message)

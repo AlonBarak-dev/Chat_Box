@@ -269,7 +269,7 @@ class Client:
         window_size = int(window_size)
 
         # bind with the server
-        recv_sock.bind((self.server_address, client_port))
+        recv_sock.bind((socket.gethostbyname(socket.gethostname()), client_port))
 
         expected_seq = 0
         # remove the file if exists
@@ -294,6 +294,7 @@ class Client:
                 while len(self.msg_dict['proceed_messages']) != 0:
                     continue
                 send_sock.sendto("Y".encode(), (self.server_address, server_port))
+                print("sent YES")
                 continue
 
             msg = Message()
