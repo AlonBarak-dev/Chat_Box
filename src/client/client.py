@@ -280,9 +280,6 @@ class Client:
         stopped = False
         last_byte = 0
 
-        # seq number : content
-        window = {}
-
         while True:
 
             # listen to the server and convert packets into message objects

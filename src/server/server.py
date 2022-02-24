@@ -387,6 +387,7 @@ class Server:
                 msg.set_seq(latest_packet_sent)
                 msg.set_message(packets[str(latest_packet_sent)])
                 print(msg.to_string())
+                time.sleep(0.2)
                 send_sock.sendto(msg.to_string().encode(), (client_address, client_port))
                 latest_packet_sent += 1
 
