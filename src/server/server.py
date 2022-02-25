@@ -3,6 +3,7 @@ import os
 import socket
 import threading
 import time
+from pathlib import Path
 
 from message import Message
 from Timer import Timer
@@ -16,9 +17,9 @@ class Server:
         self.clients = {}
 
         # list of all files located in the server
-        self.file_list = os.listdir()
+        self.file_list = os.listdir(Path().absolute())
         for file in self.file_list:
-            if 'py' in file:
+            if ".py" in file:
                 self.file_list.remove(file)
 
         # Create a STREAM socket
