@@ -47,12 +47,15 @@ class Server:
         # a list of available ports
         self.ports = [i for i in range(55000, 55020)]
 
-        # selective repeat
+        # GO-BACK-N
         self.lock = _thread.allocate_lock()
         self.base = 0
         self.timer = Timer(0.5)
         self.stop = True
         self.proceed = False
+        self.window_size = 1
+        self.expo = True
+
 
     def send_response(self, msg: Message):
         """
@@ -299,12 +302,14 @@ class Server:
         res_msg = Message()
         flag_return = False
         self.stop = False
-        window_size = 0
         server_port = 0
         client_port = 0
+        self.window_size = 1
+        self.expo = True
         packets = {}
         seq = 0
         file = None
+
         # if the file doesnt exist in the server return an error message
         if not os.path.exists(str(message.get_message())):
             res_msg.set_message("ERR")
@@ -319,16 +324,14 @@ class Server:
                 packets[str(seq)] = data
                 seq += 1
             # define window size
-            window_size = int(seq / 4) + 1
+            self.window_size = int(seq / 4) + 1
             # generate ports numbers
             server_port = int(self.ports[0])
-            # client_port = int(self.ports[1])
             del self.ports[0]
-            # del self.ports[1]
             self.port_dict[message.get_sender()] = (server_port, client_port)
             # set the message content as the chosen ports
             # "server_port,client_port,number_of_packet,window_size"
-            res_msg.set_message(str(server_port) + "," + str(client_port) + "," + str(window_size))
+            res_msg.set_message(str(server_port) + "," + str(client_port))
 
         # edit the message base on the data
         res_msg.set_response('download_response')
@@ -342,12 +345,9 @@ class Server:
             return
 
         # establish a UDP connection with the client
-        # send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # bind with the receive socket
         sock.bind((self.ip, server_port))
-        print("server port : " + str(server_port) + " client port : " + str(client_port))
         message, client_address = sock.recvfrom(1024)
         number_of_packets_needed = seq
         latest_packet_sent = 0
@@ -364,10 +364,10 @@ class Server:
         # run over the entire file
         while self.base < number_of_packets_needed:
             self.lock.acquire()
-            while latest_packet_sent < self.base + window_size:
+            while latest_packet_sent < self.base + self.window_size:
                 # trying to stop the process so the client can confirm
-                if (latest_packet_sent > number_of_packets_needed/4) and (latest_packet_sent < number_of_packets_needed/2) \
-                        and stop:
+                if abs(latest_packet_sent - number_of_packets_needed / 2) < self.window_size and stop:
+                    stop = False
                     sock.sendto("PROCEED".encode(), client_address)
                     print("PROCEED?")
                     self.lock.release()
@@ -378,7 +378,6 @@ class Server:
                 # continue sending packets
                 msg.set_seq(latest_packet_sent)
                 msg.set_message(packets[str(latest_packet_sent)])
-                print(msg.to_string())
                 sock.sendto(msg.to_string().encode(), client_address)
                 latest_packet_sent += 1
 
@@ -396,8 +395,9 @@ class Server:
             if self.timer.timeout():
                 self.timer.stop()
                 latest_packet_sent = self.base
+                self.window_size = 1
             else:
-                window_size = min(window_size, number_of_packets_needed - self.base)
+                self.window_size = min(self.window_size, number_of_packets_needed - self.base)
 
             self.lock.release()
 
@@ -419,6 +419,10 @@ class Server:
         :param recv_sock: a UDP socket
         :return:
         """
+
+        latest_ack = -1
+        counter = 0
+
         while True:
             try:
                 message = recv_sock.recv(1024)
@@ -438,6 +442,29 @@ class Server:
             msg.load(message)
             print(msg.to_string())
             ack = int(msg.get_seq())
+
+            if ack != latest_ack:
+                latest_ack = ack
+                counter = 0
+            else:
+                self.expo = False
+                counter += 1
+
+            if counter == 3:
+                counter = 0
+                self.lock.acquire()
+                self.window_size /= 2
+                self.lock.release()
+
+            if self.expo:
+                self.lock.acquire()
+                self.window_size *= 2
+                self.lock.release()
+            else:
+                self.lock.acquire()
+                self.window_size += 1
+                self.lock.release()
+
             if ack >= self.base:
                 self.lock.acquire()
                 self.base = ack + 1

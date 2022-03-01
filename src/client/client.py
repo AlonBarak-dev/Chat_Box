@@ -148,7 +148,7 @@ class Client:
         # extract the message content from the packet
         response_msg = response_msg.get_message()
         # "<name1><name2><name3>....<nameN>" is the input for extract_list function
-        user_list = self.extract_list(response_msg)
+        user_list = eval(response_msg)
         # return the users list
         return user_list
 
@@ -261,14 +261,11 @@ class Client:
             return False
 
         # establish connection with the server
-        server_port, client_port, window_size = str(response_msg.get_message()).split(",")
-        # send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        server_port, client_port = str(response_msg.get_message()).split(",")
+
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server_port = int(server_port)
         client_port = int(client_port)
-        print("server port : " + str(server_port) + " client port : " + str(client_port))
-        window_size = int(window_size)
 
         # bind with the server
         sock.bind((socket.gethostbyname(socket.gethostname()), client_port))
@@ -325,9 +322,6 @@ class Client:
                     res_msg.set_seq(expected_seq - 1)
                 sock.sendto(res_msg.to_string().encode(), (self.server_address, server_port))
 
-        print("SUCCESS")
-        # recv_sock.close()
-        # send_sock.close()
         sock.close()
         return True
 
@@ -338,9 +332,11 @@ class Client:
         :param message: "<name1><name2><name3>....<nameN>" is the input for extract_list function
         :return: a list of strings -> ["name1","name2",....,"nameN"]
         """
-        users_list = message[1:-2].split("><")
+        users_list = eval(message)
+        print(users_list)
+        black_list = ['server.py', 'server_main.py', '__init__.py', '__pycache__']
         for file in users_list:
-            print(file)
-            if (file == "'__init__.py'") or (file == "'serverGUI.py'"):
+            if (".txt" not in file) or (file in black_list):
+                print(file)
                 users_list.remove(file)
         return users_list
