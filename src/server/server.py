@@ -318,7 +318,7 @@ class Server:
             file = open(message.get_message(), 'rb')
             # add all packets to the buffer
             while True:
-                data = file.read(100).decode()
+                data = file.read(4094)
                 if not data:
                     break
                 packets[str(seq)] = data
@@ -353,20 +353,19 @@ class Server:
         latest_packet_sent = 0
         self.base = 0
         # listen to ACKs from the client
-        sock.settimeout(3)
         _thread.start_new_thread(self.receive_udp, (sock,))
 
         seq = -1
         msg = Message()
         stop = True
         break_flag = False
-
+        print(str(number_of_packets_needed))
         # run over the entire file
         while self.base < number_of_packets_needed:
             self.lock.acquire()
-            while latest_packet_sent < self.base + self.window_size:
+            while latest_packet_sent < min(self.base + self.window_size, number_of_packets_needed):
                 # trying to stop the process so the client can confirm
-                if abs(latest_packet_sent - number_of_packets_needed / 2) < self.window_size and stop:
+                if self.base == int(number_of_packets_needed / 2) and stop:
                     stop = False
                     sock.sendto("PROCEED".encode(), client_address)
                     print("PROCEED?")
@@ -374,12 +373,13 @@ class Server:
                     while not self.proceed:
                         continue
                     self.lock.acquire()
-
                 # continue sending packets
                 msg.set_seq(latest_packet_sent)
                 msg.set_message(packets[str(latest_packet_sent)])
                 sock.sendto(msg.to_string().encode(), client_address)
                 latest_packet_sent += 1
+                print(str(latest_packet_sent))
+                print(msg.to_string())
 
             # start the RTT timer
             if not self.timer.running():
@@ -403,15 +403,18 @@ class Server:
 
         msg.set_message("DONE")
         seq += 1
-        msg.set_seq(seq)
+        msg.set_seq(latest_packet_sent)
         sock.sendto(msg.to_string().encode(), client_address)
         print(msg.to_string())
 
         self.ports.append(server_port)
-        self.ports.append(client_port)
         self.stop = True
         self.proceed = False
-        # send_sock.close()
+        self.lock.acquire()
+        self.base = 0
+        self.timer = Timer(0.5)
+        self.window_size = 1
+        self.expo = True
 
     def receive_udp(self, recv_sock: socket):
         """
@@ -423,10 +426,10 @@ class Server:
         latest_ack = -1
         counter = 0
 
-        while True:
+        while not self.stop:
             try:
                 message = recv_sock.recv(1024)
-            except socket.timeout:
+            except Exception:
                 if self.stop:
                     break
                 else:

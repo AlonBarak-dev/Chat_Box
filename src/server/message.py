@@ -42,7 +42,7 @@ class Message:
 
     # gets a message as a string and loads the data into the fields of the object
     def load(self, message):
-        fields = message[1:-1].split("><")
+        fields = message[2:-2].split(">><<")
         for field in fields:
             self.info[self.prefix_to_key[field[0: 2]]] = field[2:]
 
@@ -52,7 +52,7 @@ class Message:
         for key in self.info:
             if self.info[key] is None:
                 continue
-            string_to_send += "<" + self.key_to_prefix[key] + str(self.info[key]) + ">"
+            string_to_send += "<<" + self.key_to_prefix[key] + str(self.info[key]) + ">>"
         return string_to_send
 
     def set_sender(self, sender):

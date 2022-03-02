@@ -280,10 +280,8 @@ class Client:
         while True:
 
             # listen to the server and convert packets into message objects
-            msg_bytes = sock.recv(1024)
+            msg_bytes = sock.recv(32768)
 
-            if not stopped:
-                last_byte = msg_bytes[-1]
             # check if received a PROCEED message from the server, wait for user reply
             if msg_bytes.decode() == "PROCEED":
                 stopped = True
@@ -299,7 +297,9 @@ class Client:
             print(msg.to_string())
             if msg.get_message() == "DONE":
                 break
-
+            # extract the last byte of the packet
+            if not stopped:
+                last_byte = str(msg.get_message()).encode()[-1]
             # continue receiving messages
             seq_number = int(msg.get_seq())
             data = msg.get_message()
@@ -320,7 +320,6 @@ class Client:
                     res_msg.set_seq(expected_seq - 1)
                 sock.sendto(res_msg.to_string().encode(), (self.server_address, server_port))
 
-        sock.close()
         return True
 
     def extract_list(self, message: str) -> list:
@@ -334,7 +333,6 @@ class Client:
         print(users_list)
         black_list = ['server.py', 'server_main.py', '__init__.py', '__pycache__']
         for file in users_list:
-            if (".txt" not in file) or (file in black_list):
-                print(file)
+            if file in black_list:
                 users_list.remove(file)
         return users_list
