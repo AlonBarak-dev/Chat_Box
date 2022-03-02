@@ -21,7 +21,7 @@ class Client:
         # the socket for file transfer
         self.server_download_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # default values
-        self.server_address = '127.0.0.1'
+        self.server_address = "127.0.0.1"
         self.server_address_port = (self.server_address, self.server_port)
 
         # false if doesnt connected to a server, True if does
@@ -38,7 +38,6 @@ class Client:
             'download_response': [],
             'proceed_messages': []
         }
-
 
     def send_msg(self, message: Message):
 
