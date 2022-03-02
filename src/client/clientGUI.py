@@ -182,7 +182,7 @@ class ClientGUI:
     def check_msg(self):
         print(len(self.client.msg_dict['message_received']))
         while len(self.client.msg_dict['message_received']) != 0:
-            self.display_chat.insert(END, self.client.msg_dict['message_received'].pop() + "\n")
+            self.display_chat.insert(END, self.client.msg_dict['message_received'].pop(0) + "\n")
 
     def logout(self):
         self.client.logout()
