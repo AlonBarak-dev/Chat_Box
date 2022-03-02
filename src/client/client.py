@@ -125,6 +125,7 @@ class Client:
         # else, return False
         if response_msg is True:
             self.connected = False  # disconnect from the server
+            self.server_socket.close()
             return True
         return False
 
@@ -212,13 +213,13 @@ class Client:
 
     def get_files_list(self):
         """
-        this method allows the user to ask for a list of all the files
+        this method allows the user to ask for a list of all the server_files
         stored n the server and later on choose a file from this list
         and download it
         :return: a list of strings
         """
 
-        # create a message that request a list of all files located in the server
+        # create a message that request a list of all server_files located in the server
         msg = Message()
         msg.set_request('get_file')
         msg.set_sender(self.client_name)
@@ -324,7 +325,7 @@ class Client:
 
     def extract_list(self, message: str) -> list:
         """
-        this method receive a string of users/files and extract a list from it
+        this method receive a string of users/server_files and extract a list from it
         by parsing the string name by name.
         :param message: "<name1><name2><name3>....<nameN>" is the input for extract_list function
         :return: a list of strings -> ["name1","name2",....,"nameN"]
@@ -334,5 +335,7 @@ class Client:
         black_list = ['server.py', 'server_main.py', '__init__.py', '__pycache__']
         for file in users_list:
             if file in black_list:
+                users_list.remove(file)
+            elif '.txt' not in file:
                 users_list.remove(file)
         return users_list

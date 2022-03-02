@@ -52,8 +52,8 @@ class ClientGUI:
         self.show_online_button.place(relx=0.2, rely=0.001)
         self.show_online_button["state"] = DISABLED
 
-        # show server files button
-        self.show_server_files_button = Button(self.Window, text="show server files",
+        # show server server_files button
+        self.show_server_files_button = Button(self.Window, text="show server server_files",
                                                command=lambda: self.show_server_files())
 
         self.show_server_files_button.place(relx=0.25, rely=0.001)

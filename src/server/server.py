@@ -16,8 +16,9 @@ class Server:
         # {"client_name": client_sock}
         self.clients = {}
 
-        # list of all files located in the server
-        self.file_list = os.listdir(Path().absolute())
+        # list of all server_files located in the server
+        print(Path().absolute())
+        self.file_list = os.listdir(str(Path().absolute()) + "\src\server\server_files" )
         for file in self.file_list:
             if ".py" in file:
                 self.file_list.remove(file)
@@ -55,7 +56,6 @@ class Server:
         self.proceed = False
         self.window_size = 1
         self.expo = True
-
 
     def send_response(self, msg: Message):
         """
@@ -185,6 +185,8 @@ class Server:
             res_msg.set_message(False)
         # send the message to the client
         self.send_response(res_msg)
+        # close the client socket and remove from clients list
+        self.clients[message.get_sender()].close()
         del self.clients[message.get_sender()]
 
     def msg_received(self, message: Message, user_name: str):
@@ -273,7 +275,7 @@ class Server:
 
     def files_list(self, message: Message):
         """
-        this method return a list of all files available to download which located at the server.
+        this method return a list of all server_files available to download which located at the server.
         :param message: a message object contains all the info about the clients request
         :return: a list of string ['ffile1',file2',....'fileN']
         """
@@ -311,11 +313,12 @@ class Server:
         file = None
 
         # if the file doesnt exist in the server return an error message
-        if not os.path.exists(str(message.get_message())):
+        print(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message()))
+        if not os.path.exists(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message())):
             res_msg.set_message("ERR")
             flag_return = True
         else:
-            file = open(message.get_message(), 'rb')
+            file = open(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message()), 'rb')
             # add all packets to the buffer
             while True:
                 data = file.read(4094)

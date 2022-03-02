@@ -21,14 +21,14 @@ class serverGUI:
 
         host_name = socket.gethostname()
         self.host_add = socket.gethostbyname(host_name)
-        self.lable = Label(self.Window, text="Server IP Address : " + self.host_add)
-
+        self.label = None
         self.Window.mainloop()
 
     def start_host(self):
         server = Server(self.host_add)
         server_thread = threading.Thread(target=server.listen2)
         server_thread.start()
+        self.lable = Label(self.Window, text="Server IP Address : " + self.host_add)
         self.lable.place(relx=0.10,
                          rely=0.5)
         print("server is ready..")
