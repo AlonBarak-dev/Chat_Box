@@ -225,6 +225,8 @@ class ClientGUI:
         if not flag:
             self.display_chat.insert(END, self.client.client_name +
                                      ": message failed to reach its target.. try again\n")
+        self.check_msg()
+        self.message_input.delete(0, len(message))
 
     def download_thread(self):
         file_name = self.server_file_name_input.get()
@@ -239,6 +241,8 @@ class ClientGUI:
         self.display_chat.insert(END, "\n Got a download connection\n")
         if self.client.download(file_name, new_file_name):
             self.display_chat.insert(END, "\n file: " + file_name + " was downloaded successfully!\n")
+            self.server_file_name_input.delete(0, len(file_name))
+            self.save_as_input.delete(0, new_file_name)
         else:
             self.display_chat.insert(END, "\n file: " + file_name + " doesn't exist!\n")
 
