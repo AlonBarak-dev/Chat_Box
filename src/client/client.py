@@ -264,10 +264,9 @@ class Client:
 
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         server_port = int(server_port)
-        client_port = int(client_port)
 
         # bind with the server
-        sock.bind((socket.gethostbyname(socket.gethostname()), client_port))
+        print((self.server_address, server_port))
         sock.sendto("ACK".encode(), (self.server_address, server_port))
         expected_seq = 0
         # remove the file if exists
