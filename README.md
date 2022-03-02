@@ -40,4 +40,46 @@ In this project we've defined a new Protocol for the Client-Server communication
   Server: <s:server:server_IP><r:'Client_name'><m:'Port number'/'ERR'><p:'download_response'> <br>
   
   
+  ## About the Graphic User Interface
   
+  ### How start up the Server
+     - Open the Project folder and run the next command in the command line:<br>
+       python src/server/server_main.py<br>
+       ![server_setup](https://user-images.githubusercontent.com/79144622/156465385-4fb45009-2c0b-4bd7-b889-9a70edacf09f.png)<br>
+     - Press the option you wish to run and the Server will be up and running<br>  
+       ![server_setup_IP](https://user-images.githubusercontent.com/79144622/156465410-b7db942b-c5df-42df-a89c-11e1c3c9298e.png)<br>
+       
+  ### How to start up a Client and connect to the Server
+     - Open the Project folder and run the next command in the command line:<br>
+       python src/client/client_main.py <br>
+       ![client_setup](https://user-images.githubusercontent.com/79144622/156465133-88357725-72ca-4b74-b499-f68c0562b82e.png) <br>
+     - Login to the Server using the Server IP address and your Name <br>
+       ![client_Login](https://user-images.githubusercontent.com/79144622/156465672-9e980151-4e5f-4647-8ffa-07ca5b3a43e0.png) <br>
+  
+  ### Show Online list
+     - Press the `Show Online` button <br>
+  ### Show Files list 
+     - Press the `Show server files` Button <br>
+  ### Send Broadcast message
+     - Write your message in the `message` input box.<br>
+     -  press `send` when done. <br>
+  ### Send Private message
+     - Write your message in the `message` input box.<br>
+     - Write the name of the User you want to send the message to in the `Send to` input box. <br>
+     - Press `send` when done. <br>
+  ### DownLoad a File from the Server
+     - Write the name of the file you wish to download in the `Servere file name` input box. <br>
+     - Write a name for the file to be saved as in the `File name (Client save as)` input box. <br>
+     - Press `Download` when done. <br>
+     - In a while you will get a messaeg saying the file has been downloaded at 50%.<br>
+     - Press `Proceed` if you wish to countinue with the process. <br>
+     - Look up for a message saying the download process finished successfully. <br> 
+  ### Update the screen to see messages from others
+     - In order to see the messages in the Group Chat please Press the `Update screen` button. <br>
+     - If nothing changes, there are no new messages to present. <br>
+  ### Logout from the Server
+     - Press the `Logout` Button. <br>
+     - Wait for the 'Goodbye' message. <br>
+       
+
+        
