@@ -9,8 +9,16 @@
  
  ## How to run the project
  In order to run the project on your machine please follow the instructions below:<br>
-  - Windows:
-  - Linux Ubunto 20.04:
+ Please make sure that next packages are installed in your Machine:<br>
+ `tkinter`, `pip`, `socket`, `threading`, `Path`, `_thread`. <br>
+ <br>
+ 
+  - How to install `tkinter` library on Ubunto 20.04:<br>
+    `sudo apt-get update` <br>
+    `sudo apt install python3-tk` <br>
+  - How to install `pip` library on Ubuno 20.04:<br>
+    `sudo apt update` <br>
+    `sudo apt install python3-pip` <br>
 
 ## About the Client-Server Protocol
 In this project we've defined a new Protocol for the Client-Server communication.<br>
