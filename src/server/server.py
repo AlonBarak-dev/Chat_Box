@@ -18,7 +18,10 @@ class Server:
 
         # list of all server_files located in the server
         print(Path().absolute())
-        self.file_list = os.listdir(str(Path().absolute()) + "\src\server\server_files" )
+        try:
+            self.file_list = os.listdir(str(Path().absolute()) + "\src\server\server_files" )
+        except Exception:
+            self.file_list = os.listdir(Path().absolute())
         for file in self.file_list:
             if ".py" in file:
                 self.file_list.remove(file)

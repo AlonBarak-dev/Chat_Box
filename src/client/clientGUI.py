@@ -53,7 +53,7 @@ class ClientGUI:
         self.show_online_button["state"] = DISABLED
 
         # show server server_files button
-        self.show_server_files_button = Button(self.Window, text="show server server_files",
+        self.show_server_files_button = Button(self.Window, text="show server files",
                                                command=lambda: self.show_server_files())
 
         self.show_server_files_button.place(relx=0.25, rely=0.001)
