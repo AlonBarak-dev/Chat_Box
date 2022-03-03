@@ -320,7 +320,7 @@ class Server:
         # if the file doesnt exist in the server return an error message
         print(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message()))
         if (not os.path.exists(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message()))) \
-                    or (os.path.exists(str(Path().absolute()) + "/src/server/server_files/" + str(message.get_message()))):
+                    and (not os.path.exists(str(Path().absolute()) + "/src/server/server_files/" + str(message.get_message()))):
             res_msg.set_message("ERR")
             flag_return = True
         else:
