@@ -22,29 +22,36 @@
 
 ## About the Client-Server Protocol
 In this project we've defined a new Protocol for the Client-Server communication.<br>
+Prefix to Keys:<br>
+` "m:message",
+  "s:sender", 
+  "r:recipient", 
+  "t:request", 
+  "p:response",
+  "q:sequence" ` <br>
 
 - Connection to the Server:<br>
-  Client: <s:'client_name'><r:server:server_IP><q:'connect'> <br>
+  Client: <s:'client_name'><r:server:server_IP><t:'connect'> <br>
   Server: <s:server:server_IP><r:'Client_name'><m:True/False><p:'connect_response'> <br>
 - Disconnection from the Server:<br>
-  Client: <s:'client_name'><r:server:server_IP><q:'disconnect'> <br>
+  Client: <s:'client_name'><r:server:server_IP><t:'disconnect'> <br>
   Server: <s:server:server_IP><r:'Client_name'><m:True/False><p:'disconnect_response'> <br>
 - Users List:<br>
-  Client: <s:'Client_name'><r:server:server_IP><q:'get_user_list'> <br>
+  Client: <s:'Client_name'><r:server:server_IP><t:'get_user_list'> <br>
   Server: <s:server_server_IP><r:'Client_name'><m:['user1','user2',...]><p:'user_list> <br>
 - Files List:<br>
-  Client: <s:'Client_name'><r:server:server_IP><q:'get_file'> <br>
+  Client: <s:'Client_name'><r:server:server_IP><t:'get_file'> <br>
   Server: <s:server: server_IP><r:'Client_name'><m:['file1','file2',...]><p:'file_list'> <br>
 - Broadcast Message:<br>
-  Client: <s:'Client_name'><r:'all'><q:'message_request'><m:'message info'> <br>
+  Client: <s:'Client_name'><r:'all'><t:'message_request'><m:'message info'> <br>
   Server: <s:server:server_IP><r:'Client_name'><m:True/False><p:'messagee_response'> <br>
 - Private Message:<br>
-  Client: <s:'Client_name'><r:'Client2_name'><q:'message_request'><m:'message info'> <br>
+  Client: <s:'Client_name'><r:'Client2_name'><t:'message_request'><m:'message info'> <br>
   Server: <s:server:server_IP><r:'Client_name'><m:True/False><p:'messagee_response'> <br>
 - Messgae Received:<br>
   Server: <s:'sender_name'><r:receiver_name'><m:'message info'><p:'message_received'> <br>
 - Download a file:<br>
-  Client: <s:'Client_name'><r:server:server_IP><q:'download'><m:'file name'> <br>
+  Client: <s:'Client_name'><r:server:server_IP><t:'download'><m:'file name'> <br>
   Server: <s:server:server_IP><r:'Client_name'><m:'Port number'/'ERR'><p:'download_response'> <br>
   
   
