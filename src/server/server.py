@@ -88,7 +88,10 @@ class Server:
 
         while True:
             # listen to a packet from the clients
-            msg = sock.recv(65536)
+            try:
+                msg = sock.recv(65536)
+            except Exception:
+                break
 
             # convert the bytes to string
             msg = msg.decode()
