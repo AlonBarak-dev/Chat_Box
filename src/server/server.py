@@ -19,9 +19,11 @@ class Server:
         # list of all server_files located in the server
         print(Path().absolute())
         try:
+            # windows
             self.file_list = os.listdir(str(Path().absolute()) + "\src\server\server_files" )
         except Exception:
-            self.file_list = os.listdir(Path().absolute())
+            # linux
+            self.file_list = os.listdir(str(Path().absolute()) + "/src/server/server_files")
         for file in self.file_list:
             if ".py" in file:
                 self.file_list.remove(file)
@@ -317,11 +319,15 @@ class Server:
 
         # if the file doesnt exist in the server return an error message
         print(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message()))
-        if not os.path.exists(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message())):
+        if (not os.path.exists(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message()))) \
+                    or (os.path.exists(str(Path().absolute()) + "/src/server/server_files/" + str(message.get_message()))):
             res_msg.set_message("ERR")
             flag_return = True
         else:
-            file = open(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message()), 'rb')
+            try:
+                file = open(str(Path().absolute()) + "\src\server\server_files\\" + str(message.get_message()), 'rb')
+            except Exception:
+                file = open(str(Path().absolute()) + "/src/server/server_files/" + str(message.get_message()), 'rb')
             # add all packets to the buffer
             while True:
                 data = file.read(4094)
